@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="darkreader-lock">
+<title>Queue · KartaPay</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230052CC'/%3E%3Cpath d='M10 8v16M10 16l9-8M13 15l8 9' stroke='white' stroke-width='2.4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to queue</a>
+
+<svg class="sprite" aria-hidden="true">
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5Z"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7Z"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+  <symbol id="i-block" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="m6.5 6.5 11 11"/></symbol>
+  <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></symbol>
+  <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><path d="M4 14h4l2 3h4l2-3h4"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3 2.5 20h19Z"/><path d="M12 9v5M12 17h.01"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
+  <symbol id="i-gate" viewBox="0 0 24 24"><path d="M4 20V6l8-3 8 3v14"/><path d="M9 20v-6h6v6"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.88l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09A1.7 1.7 0 0 0 15 4.6a1.7 1.7 0 0 0 1.88-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9c.12.37.43.66.82.77H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1.23Z"/></symbol>
+  <symbol id="i-message" viewBox="0 0 24 24"><path d="M5 5h14v11H9l-4 3Z"/><path d="M8 9h8M8 12h5"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
+  <symbol id="i-graph" viewBox="0 0 24 24"><rect x="2" y="3" width="7" height="5" rx="1"/><rect x="15" y="9.5" width="7" height="5" rx="1"/><rect x="2" y="16" width="7" height="5" rx="1"/><path d="M9 5.5h2.5a1 1 0 0 1 1 1V11a1 1 0 0 0 1 1H15M9 18.5h2.5a1 1 0 0 0 1-1V13a1 1 0 0 1 1-1"/></symbol>
+  <symbol id="i-expand" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-7 7M10 20H4v-6M4 20l7-7"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+  <symbol id="i-history" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="m4 12 16-8-6 16-2-6Z"/><path d="M12 14 20 4"/></symbol>
+</svg>
+
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="brand-mark" id="brand-mark" aria-hidden="true">Q</span>
+      <span class="brand-copy"><strong id="brand-name">Queue</strong><small id="brand-subtitle">Loading workspace…</small></span>
+    </div>
+
+    <nav id="sections" class="sections" aria-label="Queue sections"></nav>
+
+    <div id="gate-card" class="gate-card" hidden></div>
+
+    <div class="sidebar-foot">
+      <div class="foot-buttons">
+        <button id="settings" class="icon-button" type="button" aria-label="Queue settings" title="Queue settings">
+          <svg class="icon"><use href="#i-settings"/></svg>
+        </button>
+        <button id="theme-toggle" class="icon-button" type="button" aria-label="Switch theme">
+          <svg class="icon"><use href="#i-sun"/></svg>
+        </button>
+      </div>
+      <span class="shortcuts" title="Shortcuts: / search · n new task · i insights · g dependency graph · r refresh"><kbd>/</kbd> search <kbd>n</kbd> new</span>
+    </div>
+  </aside>
+
+  <main id="main" class="main">
+    <header class="topbar">
+      <div class="topbar-title">
+        <p class="eyebrow" id="queue-mode">Workspace queue</p>
+        <h1 id="section-title">In progress</h1>
+      </div>
+      <div class="topbar-actions">
+        <label class="search">
+          <svg class="icon" aria-hidden="true"><use href="#i-search"/></svg>
+          <input id="search" type="search" placeholder="Search tasks" aria-label="Search tasks" autocomplete="off">
+          <kbd>/</kbd>
+        </label>
+        <button id="assistant" class="btn" type="button" data-requires-ai>
+          <svg class="icon"><use href="#i-message"/></svg> <span class="assistant-label">Assistant</span>
+        </button>
+        <button id="refresh" class="icon-button" type="button" aria-label="Refresh">
+          <svg class="icon"><use href="#i-refresh"/></svg>
+        </button>
+        <button id="new-task" class="btn primary" type="button">
+          <svg class="icon"><use href="#i-plus"/></svg> New task
+        </button>
+      </div>
+    </header>
+
+    <div class="content">
+      <div id="status-strip" class="status-strip" aria-live="polite"></div>
+      <div id="task-list" class="task-list" aria-live="polite" aria-busy="true"></div>
+      <div id="view-root" class="view-root" hidden></div>
+      <article id="task-page" class="task-page" hidden aria-labelledby="page-detail-title">
+        <nav class="crumbs" aria-label="Breadcrumb">
+          <a id="task-back" href="/ready" class="crumb-back"><svg class="icon" aria-hidden="true"><use href="#i-back"/></svg><span id="task-back-label">Ready</span></a>
+          <span class="crumb-sep" aria-hidden="true">/</span>
+          <span id="task-crumb-id" class="crumb-current" aria-current="page"></span>
+        </nav>
+        <div id="task-page-detail"></div>
+      </article>
+    </div>
+  </main>
+</div>
+
+<dialog id="task-dialog" class="drawer" aria-labelledby="drawer-detail-title">
+  <div id="task-drawer-detail"></div>
+</dialog>
+
+<dialog id="add-dialog" class="modal" aria-labelledby="add-title">
+  <form id="add-form" class="modal-body">
+    <div class="modal-head">
+      <div><p class="eyebrow">Ready queue</p><h2 id="add-title">New task</h2></div>
+      <button class="icon-button" type="button" data-close aria-label="Close">
+        <svg class="icon"><use href="#i-close"/></svg>
+      </button>
+    </div>
+    <label class="field"><span>Title</span><input name="title" required autocomplete="off"></label>
+    <label class="field"><span>Next action</span><textarea name="resume" rows="3" placeholder="What should a fresh session do first?"></textarea></label>
+    <fieldset class="field">
+      <legend>Priority</legend>
+      <div class="segmented">
+        <label><input type="radio" name="priority" value="1"><span>P1</span></label>
+        <label><input type="radio" name="priority" value="2" checked><span>P2</span></label>
+        <label><input type="radio" name="priority" value="3"><span>P3</span></label>
+      </div>
+    </fieldset>
+    <div class="modal-actions">
+      <button class="btn ghost" type="button" data-close>Cancel</button>
+      <button class="btn primary" type="submit">Create task</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="block-dialog" class="modal" aria-labelledby="block-title">
+  <form id="block-form" class="modal-body">
+    <div class="modal-head">
+      <div><p class="eyebrow">Dependency</p><h2 id="block-title">Block task</h2></div>
+      <button class="icon-button" type="button" data-close aria-label="Close">
+        <svg class="icon"><use href="#i-close"/></svg>
+      </button>
+    </div>
+    <p class="muted">Choose the task or tasks that must finish first.</p>
+    <div id="block-options" class="check-list"></div>
+    <div class="modal-actions">
+      <button class="btn ghost" type="button" data-close>Cancel</button>
+      <button class="btn danger" type="submit">Block task</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="done-dialog" class="modal" aria-labelledby="done-title">
+  <form id="done-form" class="modal-body">
+    <div class="modal-head">
+      <div><p class="eyebrow">Completion</p><h2 id="done-title">Close task</h2></div>
+      <button class="icon-button" type="button" data-close aria-label="Close">
+        <svg class="icon"><use href="#i-close"/></svg>
+      </button>
+    </div>
+    <label class="field"><span>Shipped summary</span><textarea name="summary" rows="4" placeholder="What completed, and what should later readers know?"></textarea></label>
+    <div class="modal-actions">
+      <button class="btn ghost" type="button" data-close>Cancel</button>
+      <button class="btn primary" type="submit">Mark shipped</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="agent-dialog" class="drawer agent-drawer" aria-labelledby="agent-title" data-requires-ai>
+  <div class="drawer-head">
+    <div class="agent-title-block">
+      <p class="eyebrow">Assistant</p>
+      <h2 id="agent-title">Queue assistant</h2>
+      <div class="agent-identity">
+        <span id="agent-dot" class="agent-dot" aria-hidden="true"></span>
+        <span id="agent-provider">Checking assistant…</span>
+        <span id="agent-model-label">default model</span>
+        <span id="agent-connection" class="agent-connection"></span>
+      </div>
+    </div>
+    <div class="drawer-tools">
+      <button id="agent-settings" class="icon-button" type="button" aria-label="Assistant settings" title="Assistant settings">
+        <svg class="icon"><use href="#i-settings"/></svg>
+      </button>
+      <button class="icon-button" type="button" data-close aria-label="Close assistant">
+        <svg class="icon"><use href="#i-close"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="agent-toolbar">
+    <label class="compact-control">
+      <span class="sr-only">Agent</span>
+      <select id="agent-provider-select">
+        <option value="auto">Auto — first available</option>
+      </select>
+    </label>
+    <label class="compact-control">
+      <span class="sr-only">Model</span>
+      <select id="agent-model-select">
+        <option value="">Default model</option>
+      </select>
+    </label>
+    <button id="agent-history-toggle" class="history-toggle" type="button" aria-expanded="false" aria-controls="agent-history-panel">
+      <svg class="icon" aria-hidden="true"><use href="#i-history"/></svg>
+      <span>History</span>
+      <span id="agent-history-count" class="history-count"></span>
+    </button>
+    <button id="agent-new-chat" class="icon-button" type="button" aria-label="New chat" title="New chat">
+      <svg class="icon"><use href="#i-plus"/></svg>
+    </button>
+  </div>
+
+  <div class="agent-thread">
+    <section id="agent-history-panel" class="agent-history" hidden aria-label="Chat history">
+      <label class="agent-history-search">
+        <svg class="icon" aria-hidden="true"><use href="#i-search"/></svg>
+        <span class="sr-only">Search chats</span>
+        <input id="agent-history-search" type="search" placeholder="Search chats and messages" autocomplete="off">
+      </label>
+      <div id="agent-history-list" class="agent-history-list"></div>
+    </section>
+    <div id="agent-messages" class="agent-messages" aria-live="polite"></div>
+    <div id="agent-empty" class="agent-empty">
+      <span class="agent-empty-mark" aria-hidden="true"><svg class="icon"><use href="#i-message"/></svg></span>
+      <h3>Ask the queue</h3>
+      <p>Reads open tasks and the selected task. Changes require your Apply.</p>
+      <div class="agent-suggestions">
+        <button class="suggestion" type="button" data-suggest="Summarize the ready tasks and the main blockers.">Summarize ready work</button>
+        <button class="suggestion" type="button" data-suggest="What is blocking Q-0011, and what should happen next?">Explain Q-0011</button>
+        <button class="suggestion" type="button" data-suggest="Draft the next action for Q-0029.">Draft Q-0029 next action</button>
+      </div>
+    </div>
+  </div>
+
+  <form id="agent-form" class="agent-composer">
+    <div class="agent-input-wrap">
+      <textarea id="agent-input" rows="2" placeholder="Ask about the queue…" aria-label="Ask the queue assistant"></textarea>
+      <button class="agent-send" type="submit" aria-label="Send message" title="Send">
+        <svg class="icon"><use href="#i-send"/></svg>
+      </button>
+    </div>
+    <div class="agent-composer-foot">
+      <span id="agent-status" role="status"></span>
+      <span class="agent-hint">Enter to send · Shift+Enter for a new line</span>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="settings-dialog" class="modal" aria-labelledby="settings-title">
+  <form id="settings-form" class="modal-body">
+    <div class="modal-head">
+      <div><p class="eyebrow" id="settings-eyebrow">Configuration</p><h2 id="settings-title">Queue settings</h2></div>
+      <button class="icon-button" type="button" data-close aria-label="Close">
+        <svg class="icon"><use href="#i-close"/></svg>
+      </button>
+    </div>
+    <p id="settings-note" class="muted" hidden>This creates the queue files in this folder. The folder needs a CLAUDE.md or AGENTS.md.</p>
+    <label class="field"><span>Project name</span><input name="name" maxlength="80" required autocomplete="off"></label>
+    <label class="field">
+      <span>Layout</span>
+      <select name="layout">
+        <option value="workspace">Workspace — separate repositories</option>
+        <option value="monorepo">Monorepo — one repository, many projects</option>
+        <option value="single-repo">Single repository</option>
+      </select>
+    </label>
+    <label class="field" id="repos-field">
+      <span>Repositories or projects</span>
+      <textarea name="repos" rows="6" placeholder="atlas-dashboard&#10;recharge-connect/recharge-api"></textarea>
+      <small class="muted">One per line. Used for the repository chips on tasks.</small>
+    </label>
+    <fieldset class="field assistant-settings" data-requires-ai>
+      <legend>Assistant</legend>
+      <label class="field">
+        <span>Provider</span>
+        <select name="agent_provider">
+          <option value="auto">Auto — first available</option>
+        </select>
+        <small id="agent-availability" class="muted"></small>
+      </label>
+      <small class="muted">Choose the model in the assistant toolbar. CLI providers use the installed Claude/Codex login. API providers read ANTHROPIC_API_KEY, OPENAI_API_KEY or DEEPSEEK_API_KEY from the server environment or .queue/agent.env; keys are never stored in this config or sent to the browser.</small>
+    </fieldset>
+    <div class="modal-actions">
+      <button class="btn ghost" type="button" data-close>Cancel</button>
+      <button class="btn primary" type="submit" id="settings-submit">Save settings</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="toasts" class="toasts" aria-live="polite" aria-atomic="false"></div>
+<noscript><p class="noscript">This queue UI needs JavaScript. The shell CLI remains available.</p></noscript>
+<script type="module" src="/app.js"></script>
+</body>
+</html>

@@ -1,5 +1,7 @@
 # queue-manager
 
+[![skills.sh installs](https://skills.sh/b/faouziMohamed/queue-manager-skill)](https://skills.sh/faouziMohamed/queue-manager-skill)
+
 A task queue for coding agents that lives in your repository as plain files.
 Each task is one Markdown file, its folder is its status, and a small POSIX
 shell CLI moves tasks between states. Any session, yours, a colleague's or
@@ -20,7 +22,7 @@ the original classic sidebar.
 ## Install
 
 ```sh
-npx skills add faouziMohamed/queue-manager
+npx skills add faouziMohamed/queue-manager-skill
 ```
 
 Or copy this folder into your agent's skills directory, for example

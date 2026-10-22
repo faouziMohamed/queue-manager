@@ -2,11 +2,11 @@ import {escapeHtml} from './render.js'
 import {loadECharts} from './vendor.js'
 
 export const statusOrder = [
-  {key: 'in-progress', label: 'In progress', token: '--brand'},
-  {key: 'ready', label: 'Ready', token: '--ok'},
-  {key: 'blocked', label: 'Blocked', token: '--danger'},
-  {key: 'awaiting', label: 'Awaiting production', token: '--warn'},
-  {key: 'done', label: 'Done', token: '--faint'},
+  {key: 'in-progress', label: 'In progress', token: '--status-in-progress'},
+  {key: 'ready', label: 'Ready', token: '--status-ready'},
+  {key: 'blocked', label: 'Blocked', token: '--status-blocked'},
+  {key: 'awaiting', label: 'Awaiting production', token: '--status-awaiting'},
+  {key: 'done', label: 'Done', token: '--status-done'},
 ]
 
 const openStatuses = statusOrder.filter(status => status.key !== 'done')

@@ -52,6 +52,8 @@ export async function detectWorkspace(rootPath) {
     name: path.basename(rootPath),
     layout,
     mode: layout === 'single-repo' ? 'repo' : 'workspace',
+    view: 'list',
+    design: 'jira',
     repos: repos.sort(),
     agent: {provider: 'auto', model: ''},
   }
@@ -61,6 +63,10 @@ export function normalizeWorkspaceConfig(input, fallbackName) {
   const name = String(input.name || fallbackName || 'Queue').trim().slice(0, 80) || 'Queue'
   const allowed = ['workspace', 'monorepo', 'single-repo']
   const layout = allowed.includes(input.layout) ? input.layout : 'single-repo'
+  const views = ['list', 'board']
+  const view = views.includes(input.view) ? input.view : 'list'
+  const designs = ['jira', 'classic']
+  const design = designs.includes(input.design) ? input.design : 'jira'
   const repos = layout === 'single-repo' ? [] : [...new Set(
     (Array.isArray(input.repos) ? input.repos : [])
       .map(value => String(value).trim())
@@ -77,6 +83,8 @@ export function normalizeWorkspaceConfig(input, fallbackName) {
     name,
     layout,
     mode: layout === 'single-repo' ? 'repo' : 'workspace',
+    view,
+    design,
     repos,
     agent,
   }
@@ -100,6 +108,8 @@ export async function writeWorkspaceConfig(rootPath, config) {
       version: 1,
       name: config.name,
       layout: config.layout,
+      view: config.view,
+      design: config.design,
       repos: config.repos,
       agent: config.agent,
     }, null, 2)}\n`,

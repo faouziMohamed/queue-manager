@@ -15,7 +15,7 @@ function inline(value) {
   text = text.replace(/(^|[^*])\*([^*]+)\*/g, '$1<em>$2</em>')
   text = text.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_, label, url) => {
     const href = url.replace(/&amp;/g, '&')
-    if (!/^(https?:\/\/|mailto:|#)/i.test(href)) return label
+    if (!/^(https?:\/\/|mailto:|#|\/)/i.test(href)) return label
     const external = /^https?:/i.test(href)
     return `<a href="${escapeHtml(href)}"${external ? ' target="_blank" rel="noreferrer"' : ''}>${label}</a>`
   })

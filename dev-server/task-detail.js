@@ -36,6 +36,11 @@ export function mountTaskDetail(root, {variant, onAction, onSave, onOpenFull, on
       element('blockers').innerHTML = relationRows(view.task.blockedBy, context, 'Not blocked by any task.')
       const dependents = context.tasks.filter(task => task.blockedBy.includes(view.task.id)).map(task => task.id)
       element('dependents').innerHTML = relationRows(dependents, context, 'No task waits on this one.')
+      const pitfalls = [...new Set((view.task.body.match(/\bPIT-\d{3,}\b/gi) || []).map(id => id.toUpperCase()))]
+      element('pitfalls-card').hidden = pitfalls.length === 0
+      element('pitfalls').innerHTML = pitfalls
+        .map(id => `<a class="chip pitfall" href="/pitfalls#${id.toLowerCase()}">${escapeHtml(id)}</a>`)
+        .join('')
     }
   }
 
@@ -91,6 +96,7 @@ export function mountTaskDetail(root, {variant, onAction, onSave, onOpenFull, on
       await onSave(view.task, body)
       view.task.body = body
       renderBody(body)
+      refresh(view.context)
       setMode('view')
       element('save-status').textContent = 'Saved'
     } catch {
@@ -161,6 +167,9 @@ function template(variant) {
         <section class="side-card"><h3>Details</h3><dl class="facts" data-detail="facts"></dl></section>
         <section class="side-card"><h3>Blocked by</h3><div class="relation-list" data-detail="blockers"></div></section>
         <section class="side-card"><h3>Blocks</h3><div class="relation-list" data-detail="dependents"></div></section>
+        <section class="side-card" data-detail="pitfalls-card" hidden>
+          <h3>Related pitfalls</h3><div class="relation-list" data-detail="pitfalls"></div>
+        </section>
         <section class="side-card outline-card" data-detail="outline-card" hidden>
           <h3>On this page</h3><nav class="outline" data-detail="outline" aria-label="Task body outline"></nav>
         </section>

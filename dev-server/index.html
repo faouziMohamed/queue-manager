@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
 <meta name="darkreader-lock">
-<title>Queue · KartaPay</title>
+<title>Queue</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230052CC'/%3E%3Cpath d='M10 8v16M10 16l9-8M13 15l8 9' stroke='white' stroke-width='2.4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="/styles.css">
 </head>
-<body>
+<body class="design-jira">
 <a class="skip-link" href="#main">Skip to queue</a>
 
 <svg class="sprite" aria-hidden="true">
@@ -33,6 +33,12 @@
   <symbol id="i-message" viewBox="0 0 24 24"><path d="M5 5h14v11H9l-4 3Z"/><path d="M8 9h8M8 12h5"/></symbol>
   <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
   <symbol id="i-graph" viewBox="0 0 24 24"><rect x="2" y="3" width="7" height="5" rx="1"/><rect x="15" y="9.5" width="7" height="5" rx="1"/><rect x="2" y="16" width="7" height="5" rx="1"/><path d="M9 5.5h2.5a1 1 0 0 1 1 1V11a1 1 0 0 0 1 1H15M9 18.5h2.5a1 1 0 0 0 1-1V13a1 1 0 0 1 1-1"/></symbol>
+  <symbol id="i-board" viewBox="0 0 24 24"><rect x="3" y="4" width="5" height="16" rx="1"/><rect x="10" y="4" width="5" height="10" rx="1"/><rect x="17" y="4" width="4" height="13" rx="1"/></symbol>
+  <symbol id="i-drag" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/></symbol>
+  <symbol id="i-prio-up" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></symbol>
+  <symbol id="i-prio-eq" viewBox="0 0 24 24"><path d="M6 9h12M6 15h12"/></symbol>
+  <symbol id="i-prio-down" viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
   <symbol id="i-expand" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-7 7M10 20H4v-6M4 20l7-7"/></symbol>
   <symbol id="i-back" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
   <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></symbol>
@@ -41,6 +47,36 @@
   <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></symbol>
   <symbol id="i-send" viewBox="0 0 24 24"><path d="m4 12 16-8-6 16-2-6Z"/><path d="M12 14 20 4"/></symbol>
 </svg>
+
+<header class="topbar">
+      <span class="topbar-mark" aria-hidden="true">Q</span>
+      <div class="topbar-title">
+        <p class="eyebrow" id="queue-mode">Workspace queue</p>
+        <h1 id="section-title">In progress</h1>
+      </div>
+      <div class="topbar-actions">
+        <label class="search">
+          <svg class="icon" aria-hidden="true"><use href="#i-search"/></svg>
+          <input id="search" type="search" placeholder="Search tasks" aria-label="Search tasks" autocomplete="off">
+          <kbd>/</kbd>
+        </label>
+        <button id="settings" class="topbar-icon" type="button" aria-label="Queue settings" title="Queue settings">
+          <svg class="icon"><use href="#i-settings"/></svg>
+        </button>
+        <button id="theme-toggle" class="topbar-icon" type="button" aria-label="Switch theme">
+          <svg class="icon"><use href="#i-sun"/></svg>
+        </button>
+        <button id="assistant" class="btn" type="button" data-requires-ai>
+          <svg class="icon"><use href="#i-message"/></svg> <span class="assistant-label">Assistant</span>
+        </button>
+        <button id="refresh" class="icon-button" type="button" aria-label="Refresh">
+          <svg class="icon"><use href="#i-refresh"/></svg>
+        </button>
+        <button id="new-task" class="btn primary" type="button">
+          <svg class="icon"><use href="#i-plus"/></svg> New task
+        </button>
+      </div>
+    </header>
 
 <div class="shell">
   <aside class="sidebar">
@@ -54,43 +90,16 @@
     <div id="gate-card" class="gate-card" hidden></div>
 
     <div class="sidebar-foot">
-      <div class="foot-buttons">
-        <button id="settings" class="icon-button" type="button" aria-label="Queue settings" title="Queue settings">
-          <svg class="icon"><use href="#i-settings"/></svg>
-        </button>
-        <button id="theme-toggle" class="icon-button" type="button" aria-label="Switch theme">
-          <svg class="icon"><use href="#i-sun"/></svg>
-        </button>
-      </div>
-      <span class="shortcuts" title="Shortcuts: / search · n new task · i insights · g dependency graph · r refresh"><kbd>/</kbd> search <kbd>n</kbd> new</span>
+      <span class="shortcuts" title="Shortcuts: / search · n new task · b board · p pitfalls · i insights · g dependency graph · r refresh"><kbd>/</kbd> search <kbd>n</kbd> new</span>
     </div>
   </aside>
 
   <main id="main" class="main">
-    <header class="topbar">
-      <div class="topbar-title">
-        <p class="eyebrow" id="queue-mode">Workspace queue</p>
-        <h1 id="section-title">In progress</h1>
-      </div>
-      <div class="topbar-actions">
-        <label class="search">
-          <svg class="icon" aria-hidden="true"><use href="#i-search"/></svg>
-          <input id="search" type="search" placeholder="Search tasks" aria-label="Search tasks" autocomplete="off">
-          <kbd>/</kbd>
-        </label>
-        <button id="assistant" class="btn" type="button" data-requires-ai>
-          <svg class="icon"><use href="#i-message"/></svg> <span class="assistant-label">Assistant</span>
-        </button>
-        <button id="refresh" class="icon-button" type="button" aria-label="Refresh">
-          <svg class="icon"><use href="#i-refresh"/></svg>
-        </button>
-        <button id="new-task" class="btn primary" type="button">
-          <svg class="icon"><use href="#i-plus"/></svg> New task
-        </button>
-      </div>
-    </header>
+    
 
     <div class="content">
+      <div id="app-header" class="app-header"></div>
+      <div id="list-nav" class="list-nav" hidden></div>
       <div id="status-strip" class="status-strip" aria-live="polite"></div>
       <div id="task-list" class="task-list" aria-live="polite" aria-busy="true"></div>
       <div id="view-root" class="view-root" hidden></div>
@@ -260,6 +269,22 @@
     <p id="settings-note" class="muted" hidden>This creates the queue files in this folder. The folder needs a CLAUDE.md or AGENTS.md.</p>
     <label class="field"><span>Project name</span><input name="name" maxlength="80" required autocomplete="off"></label>
     <label class="field">
+      <span>Design</span>
+      <select name="design">
+        <option value="jira">Jira-style — project header and tabs (new)</option>
+        <option value="classic">Classic — sidebar layout (old)</option>
+      </select>
+      <small class="muted">Switch between the new Jira-style interface and the original sidebar layout.</small>
+    </label>
+    <label class="field">
+      <span>Queue view</span>
+      <select name="view">
+        <option value="list">List — current view</option>
+        <option value="board">Board — Jira-style columns</option>
+      </select>
+      <small class="muted">Sets the default view. Both stay available.</small>
+    </label>
+    <label class="field">
       <span>Layout</span>
       <select name="layout">
         <option value="workspace">Workspace — separate repositories</option>
@@ -269,7 +294,7 @@
     </label>
     <label class="field" id="repos-field">
       <span>Repositories or projects</span>
-      <textarea name="repos" rows="6" placeholder="atlas-dashboard&#10;recharge-connect/recharge-api"></textarea>
+      <textarea name="repos" rows="6" placeholder="web-app&#10;services/api"></textarea>
       <small class="muted">One per line. Used for the repository chips on tasks.</small>
     </label>
     <fieldset class="field assistant-settings" data-requires-ai>

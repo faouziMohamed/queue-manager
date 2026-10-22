@@ -6,11 +6,19 @@ HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 ROOT=${WORKSPACE_ROOT:-$(pwd)}
 ROOT=$(CDPATH= cd -- "$ROOT" && pwd)
 COMMAND=${1:-status}
-PORT=${2:-${PORT:-4317}}
-URL="http://127.0.0.1:$PORT"
 RUNTIME_DIR="$ROOT/.queue"
 PID_FILE="$RUNTIME_DIR/dev-server.pid"
+PORT_FILE="$RUNTIME_DIR/dev-server.port"
 LOG_FILE="$RUNTIME_DIR/dev-server.log"
+if [ -n "${2:-}" ]; then
+  PORT=$2
+elif [ -n "${PORT:-}" ]; then
+  PORT=$PORT
+elif [ -f "$PORT_FILE" ]; then
+  PORT=$(cat "$PORT_FILE" 2>/dev/null)
+fi
+PORT=${PORT:-4317}
+URL="http://127.0.0.1:$PORT"
 SERVER_MARK="dev-server/server.mjs $ROOT"
 
 answers() {
@@ -32,7 +40,8 @@ start() {
   mkdir -p "$RUNTIME_DIR"
   pid=$(running_pid)
   if [ -n "$pid" ]; then
-    printf 'Dev server already running (PID %s) at %s.\n' "$pid" "$URL"
+    _running_port=$(cat "$PORT_FILE" 2>/dev/null || printf '%s' "$PORT")
+    printf 'Dev server already running (PID %s) at http://127.0.0.1:%s.\n' "$pid" "$_running_port"
     return 0
   fi
   rm -f "$PID_FILE"
@@ -41,6 +50,7 @@ start() {
     return 1
   fi
   printf 'Starting dev server at %s ...\n' "$URL"
+  printf '%s\n' "$PORT" > "$PORT_FILE"
   (cd "$ROOT" && WORKSPACE_ROOT="$ROOT" exec nohup sh "$HERE/serve.sh" "$PORT") > "$LOG_FILE" 2>&1 &
   printf '%s\n' "$!" > "$PID_FILE"
   i=0
@@ -56,6 +66,7 @@ start() {
   done
   printf 'Dev server did not answer; last log lines:\n' >&2
   tail -n 20 "$LOG_FILE" >&2 2>/dev/null
+  rm -f "$PID_FILE" "$PORT_FILE"
   return 1
 }
 
@@ -63,7 +74,7 @@ stop() {
   pid=$(running_pid)
   if [ -z "$pid" ]; then
     printf 'No running dev server found for %s.\n' "$ROOT"
-    rm -f "$PID_FILE"
+    rm -f "$PID_FILE" "$PORT_FILE"
     return 0
   fi
   printf 'Stopping dev server (PID %s) ...\n' "$pid"
@@ -77,7 +88,7 @@ stop() {
     printf 'Force stopping ...\n'
     kill -9 "$pid" 2>/dev/null
   fi
-  rm -f "$PID_FILE"
+  rm -f "$PID_FILE" "$PORT_FILE"
 }
 
 status() {
@@ -99,7 +110,8 @@ open_browser() {
 }
 
 case "$COMMAND" in
-  run) cd "$ROOT" && WORKSPACE_ROOT="$ROOT" exec sh "$HERE/serve.sh" "$PORT" ;;
+  run) mkdir -p "$RUNTIME_DIR" && printf '%s\n' "$PORT" > "$PORT_FILE" &&
+       cd "$ROOT" && WORKSPACE_ROOT="$ROOT" exec sh "$HERE/serve.sh" "$PORT" ;;
   start) start ;;
   stop) stop ;;
   restart) stop && start ;;

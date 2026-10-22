@@ -1,6 +1,7 @@
 import {api, toTask} from './api.js'
 import {$, isTyping, showToast, state} from './app-state.js'
 import {initAssistant} from './assistant.js'
+import {initBoard} from './board.js'
 import {installGraph} from './graph.js'
 import {initNavigation} from './navigation.js'
 import {applyWorkspaceHeader, render} from './render.js'
@@ -17,6 +18,7 @@ async function loadTasks() {
   try {
     const payload = await api('/api/tasks')
     state.tasks = payload.tasks.map(toTask)
+    state.queueVersion += 1
     state.gates = payload.gates.map(String)
     state.initialized = payload.initialized !== false
     state.workspace = payload.workspace || state.workspace
@@ -32,6 +34,10 @@ async function loadTasks() {
       const hasReady = state.tasks.some(task => task.status === 'ready')
       if (!state.sectionExplicit && state.section === 'in-progress' && !hasInProgress && hasReady) state.section = 'ready'
     }
+    if (!state.sectionExplicit && state.view !== 'task' && state.workspace.view === 'board' && location.pathname === '/') {
+      state.section = 'board'
+      history.replaceState(null, '', '/board')
+    }
     render(state)
     navigation.refreshOpenDetails()
   }
@@ -45,6 +51,46 @@ const actions = initTaskActions({
   openPeek: id => navigation.openPeek(id),
   openSettings: mode => settings.open(mode),
 })
+
+function handleBoardMove(task, target) {
+  if (!task) return
+  if (target === 'awaiting') {
+    showToast('Awaiting production comes from a production gate; use Block to link the gate.', 'info')
+    return
+  }
+  if (task.status === 'done') {
+    showToast('Done records are immutable.', 'error')
+    return
+  }
+  if (target === 'in-progress') {
+    if (task.status === 'in-progress') return
+    if (task.status === 'ready' && !task.awaitingProduction) {
+      actions.handleDetailAction(task, 'start')
+      return
+    }
+    showToast(task.status === 'blocked' || task.awaitingProduction
+      ? 'Unblock the task before starting it.'
+      : 'Only a ready task can be started.', 'error')
+    return
+  }
+  if (target === 'ready') {
+    if (task.status === 'ready') return
+    if (task.status === 'blocked') {
+      actions.handleDetailAction(task, 'unblock')
+      return
+    }
+    showToast(task.status === 'in-progress'
+      ? 'An in-progress task can only be done or blocked.'
+      : 'Only a blocked task can move back to ready.', 'error')
+    return
+  }
+  if (target === 'blocked') {
+    if (task.status === 'blocked') return
+    actions.handleDetailAction(task, 'block')
+    return
+  }
+  if (target === 'done') actions.handleDetailAction(task, 'done')
+}
 
 const navigation = initNavigation({
   loadTasks,
@@ -106,6 +152,8 @@ function handleShortcut(event) {
     event.preventDefault()
     actions.openAddDialog()
   }
+  if (event.key === 'b') navigation.setSection('board')
+  if (event.key === 'p') navigation.setSection('pitfalls')
   if (event.key === 'i') navigation.setSection('insights')
   if (event.key === 'g') navigation.setSection('graph')
   if (event.key === 'Escape' && state.view === 'task') navigation.goBack()
@@ -117,6 +165,10 @@ $('#task-list').addEventListener('click', handleListClick)
 
 const viewRoot = $('#view-root')
 installGraph(viewRoot)
+initBoard({
+  root: viewRoot,
+  onMove: handleBoardMove,
+})
 viewRoot.addEventListener('click', handleListClick)
 viewRoot.addEventListener('queue-open-task', event => navigation.openPeek(event.detail))
 viewRoot.addEventListener('queue-set-section', event => navigation.setSection(event.detail))
@@ -132,6 +184,12 @@ $('#assistant').addEventListener('click', () => {
   if (document.documentElement.dataset.ai === 'on') assistant.open()
 })
 window.addEventListener('queue-agent-config-changed', detectAssistant)
+window.addEventListener('queue-view-changed', event => {
+  if (state.view === 'task') return
+  const view = event.detail?.view
+  if (view === 'board' && state.section !== 'board') navigation.setSection('board')
+  else if (view === 'list' && state.section === 'board') navigation.setSection('ready')
+})
 
 document.addEventListener('click', event => {
   const close = event.target.closest('[data-close]')

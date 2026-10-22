@@ -6,6 +6,7 @@ import path from 'node:path'
 import {fileURLToPath} from 'node:url'
 import {agentAvailability, agentModels, runAgent} from './agent.mjs'
 import {openChatStore} from './chats.mjs'
+import {attachLinkedTasks, readPitfalls} from './pitfalls.mjs'
 import {createSessionIndex} from './sessions.mjs'
 import {
   detectWorkspace,
@@ -106,7 +107,7 @@ async function readBlockedBy(id) {
   }
 }
 
-async function listTasks() {
+async function listTasks({keepBodies = false} = {}) {
   const tasks = []
   for (const status of statuses) {
     let entries = []
@@ -121,7 +122,7 @@ async function listTasks() {
       const parsed = parseTask(await fs.readFile(file, 'utf8'), status, file)
       if (!parsed) continue
       const task = withWorkspaceIdentity(parsed, workspace)
-      task.body = ''
+      if (!keepBodies) task.body = ''
       task.blockedBy = await readBlockedBy(task.id)
       tasks.push(task)
     }
@@ -269,7 +270,7 @@ async function handleChats(request, response, url) {
   return false
 }
 
-const pageRoutes = ['/', '/in-progress', '/ready', '/blocked', '/awaiting', '/done', '/insights', '/graph']
+const pageRoutes = ['/', '/board', '/in-progress', '/ready', '/blocked', '/awaiting', '/done', '/pitfalls', '/insights', '/graph']
 
 function isPageRoute(pathname) {
   return pageRoutes.includes(pathname) || /^\/tasks\/Q-\d{4,}$/.test(pathname)
@@ -400,6 +401,13 @@ const server = createServer(async (request, response) => {
         return
       }
       sendJson(response, 200, await listTasks())
+      return
+    }
+
+    if (request.method === 'GET' && url.pathname === '/api/pitfalls') {
+      const pitfalls = await readPitfalls(root)
+      const tasks = initialized ? (await listTasks({keepBodies: true})).tasks : []
+      sendJson(response, 200, attachLinkedTasks(pitfalls, tasks))
       return
     }
 

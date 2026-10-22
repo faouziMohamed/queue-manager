@@ -24,6 +24,9 @@ ROOT=${WORKSPACE_ROOT:-}
 if [ -z "$ROOT" ] && [ "${1:-}" = "init" ]; then
   ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
 fi
+case "${1:-help}" in
+  help|-h|--help) [ -n "$ROOT" ] || ROOT=$(pwd) ;;
+esac
 if [ -z "$ROOT" ] || [ ! -d "$ROOT" ]; then
   printf 'queue: cannot locate the workspace root (no .queue/, CLAUDE.md or AGENTS.md); run "queue.sh init" there or set WORKSPACE_ROOT\n' >&2
   exit 1
@@ -41,8 +44,8 @@ TODAY=$(date +%Y-%m-%d)
 die() { printf 'queue: %s\n' "$*" >&2; exit 1; }
 
 usage() {
+  printf 'Usage: sh %s <command> [options]\n' "$SCRIPT_DIR/queue.sh"
   cat <<'EOF'
-Usage: sh .claude/skills/queue-manager/scripts/queue.sh <command> [options]
 
   active                         Show the active task and its file path
   path <id>                      Print the absolute path of a task body
@@ -71,11 +74,12 @@ ensure_layout() {
   mkdir -p "$QUEUE_DIR/ready" "$QUEUE_DIR/in-progress" "$QUEUE_DIR/blocked" \
     "$QUEUE_DIR/done" "$DEPS_DIR" || die "cannot create queue layout"
   [ -f "$NEXT_ID_FILE" ] || printf '1\n' > "$NEXT_ID_FILE"
-  for _ignored in agent.env chats.sqlite chats.sqlite-wal chats.sqlite-shm dev-server.pid dev-server.log; do
+  for _ignored in agent.env chats.sqlite chats.sqlite-wal chats.sqlite-shm dev-server.pid dev-server.port dev-server.log; do
     grep -qxF "$_ignored" "$QUEUE_DIR/.gitignore" 2>/dev/null || printf '%s\n' "$_ignored" >> "$QUEUE_DIR/.gitignore"
   done
   if [ ! -f "$HEADER_FILE" ] && [ -f "$DEFAULT_HEADER" ]; then
-    cp "$DEFAULT_HEADER" "$HEADER_FILE"
+    _project=$(basename "$ROOT" | sed 's/[&|\\]/\\&/g')
+    sed "s|{{project}}|$_project|g" "$DEFAULT_HEADER" > "$HEADER_FILE"
   fi
 }
 
@@ -296,7 +300,7 @@ index_queue() {
     if [ -f "$HEADER_FILE" ]; then
       cat "$HEADER_FILE"
     else
-      printf '# QUEUE — Social Connect\n'
+      printf '# Queue — %s\n' "$(basename "$ROOT")"
     fi
 
     printf '\n## Index\n\n'

@@ -8,6 +8,7 @@ export const state = {
   returnSection: '',
   query: '',
   loading: true,
+  queueVersion: 0,
   error: '',
   forbidden: false,
   blockTarget: null,
@@ -16,7 +17,9 @@ export const state = {
   initialised: false,
   initialized: true,
   settingsMode: 'settings',
-  workspace: {name: 'Queue', mode: 'repo', layout: 'single-repo', repos: []},
+  boardRepo: '',
+  boardShowDone: false,
+  workspace: {name: 'Queue', mode: 'repo', layout: 'single-repo', view: 'list', design: 'jira', repos: []},
 }
 
 export const $ = selector => document.querySelector(selector)

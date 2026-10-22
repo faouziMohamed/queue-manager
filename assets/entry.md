@@ -30,7 +30,8 @@ Goal and agreed scope, in a few short sentences.
 
 ## Related pitfalls
 
-- [PIT-000: title](PITFALLS.md#pit-000) — applicable rule.
+- Optional: link the project's known-traps doc if it has one, e.g.
+  [PIT-000: title](PITFALLS.md#pit-000) — applicable rule.
 
 ## Progress
 

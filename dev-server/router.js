@@ -1,4 +1,4 @@
-const sectionIds = ['in-progress', 'ready', 'blocked', 'awaiting', 'done', 'insights', 'graph']
+const sectionIds = ['board', 'in-progress', 'ready', 'blocked', 'awaiting', 'done', 'pitfalls', 'insights', 'graph']
 
 const taskIdPattern = /^Q-\d{4,}$/
 
@@ -42,5 +42,5 @@ export function internalPath(anchor, event) {
   if (url.origin !== location.origin) return ''
   const route = parseRoute(url.pathname, url.search)
   const isPage = route.kind === 'task' || route.section || url.pathname === '/'
-  return isPage ? `${url.pathname}${url.search}` : ''
+  return isPage ? `${url.pathname}${url.search}${url.hash}` : ''
 }

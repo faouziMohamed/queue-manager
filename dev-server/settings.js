@@ -11,6 +11,8 @@ export function initSettings({loadTasks}) {
     state.settingsMode = mode
     const workspace = state.workspace
     form.elements.name.value = workspace.name || ''
+    form.elements.view.value = workspace.view || 'list'
+    form.elements.design.value = workspace.design || 'jira'
     form.elements.layout.value = workspace.layout || 'single-repo'
     form.elements.repos.value = (workspace.repos || []).join('\n')
     form.elements.repos.disabled = form.elements.layout.value === 'single-repo'
@@ -29,8 +31,11 @@ export function initSettings({loadTasks}) {
     const data = new FormData(form)
     const provider = data.get('agent_provider')
     const previousAgent = state.workspace.agent || {}
+    const previousView = state.workspace.view || 'list'
     const payload = {
       name: data.get('name'),
+      view: data.get('view') === 'board' ? 'board' : 'list',
+      design: data.get('design') === 'classic' ? 'classic' : 'jira',
       layout: data.get('layout'),
       repos: String(data.get('repos') || '').split('\n').map(value => value.trim()).filter(Boolean),
       agent: {
@@ -45,6 +50,9 @@ export function initSettings({loadTasks}) {
       showToast(state.settingsMode === 'init' ? 'Queue initialized.' : 'Queue settings saved.', 'success')
       window.dispatchEvent(new CustomEvent('queue-agent-config-changed'))
       await loadTasks()
+      if (payload.view !== previousView) {
+        window.dispatchEvent(new CustomEvent('queue-view-changed', {detail: {view: payload.view}}))
+      }
     } catch (error) {
       showToast(error.message, 'error')
     }

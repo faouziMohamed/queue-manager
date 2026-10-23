@@ -287,6 +287,11 @@
       <small class="muted">Sets the default view. Both stay available.</small>
     </label>
     <label class="field">
+      <span>Work in progress limit</span>
+      <input name="wipLimit" type="number" min="1" max="20" step="1" value="1" required>
+      <small class="muted">How many tasks may be in progress at once. 1 keeps a single active task.</small>
+    </label>
+    <label class="field">
       <span>Layout</span>
       <select name="layout">
         <option value="workspace">Workspace — separate repositories</option>

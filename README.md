@@ -68,7 +68,7 @@ sh .claude/skills/queue-manager/scripts/queue.sh ui open
 | `.queue/header.md` | Static header of the generated `QUEUE.md` |
 | `QUEUE.md` | Generated overview; never edit it by hand |
 | `PITFALLS.md` | Durable `PIT-###` lessons; tasks link to them by ID |
-| `.queue/config.json` | Optional UI settings |
+| `.queue/config.json` | Optional settings: UI layout and `wipLimit` (tasks allowed in progress at once, default 1) |
 | `.queue/chats.sqlite`, `.queue/agent.env` | UI chat history and optional API keys (git-ignored) |
 
 Whether you commit `.queue/` and `QUEUE.md` is up to you.

@@ -47,7 +47,7 @@ usage() {
   printf 'Usage: sh %s <command> [options]\n' "$SCRIPT_DIR/queue.sh"
   cat <<'EOF'
 
-  active                         Show the active task and its file path
+  active                         Show the active tasks and their file paths
   path <id>                      Print the absolute path of a task body
   show <id>                      Print a task body and its dependencies
   add "Title" [options]          Create a task; prints its id
@@ -57,7 +57,7 @@ usage() {
     --resume "text"              Override the Resume line
     --start                      Start immediately (only if unblocked)
     --on-hold                    Create the task on hold
-  start <id>                     Move a ready task to in-progress
+  start <id>                     Move a ready task to in-progress (up to wipLimit)
   block <id> --by Q-0001,...     Add blockers and mark it blocked
   unblock <id>                   Move to ready once every blocker is done
   hold <id>                      Park an open task on hold
@@ -104,6 +104,48 @@ acquire_lock() {
 
 release_lock() {
   rmdir "$QUEUE_DIR/.lock" 2>/dev/null || true
+}
+
+wip_limit() {
+  # Matches the first positive integer assigned to "wipLimit" in config.json.
+  _wl_value=$(sed -n 's/.*"wipLimit"[[:space:]]*:[[:space:]]*\([1-9][0-9]*\).*/\1/p' \
+    "$QUEUE_DIR/config.json" 2>/dev/null | head -n 1)
+  printf '%s\n' "${_wl_value:-1}"
+}
+
+active_ids() {
+  [ -f "$ACTIVE_FILE" ] || return 0
+  grep -v '^[[:space:]]*$' "$ACTIVE_FILE"
+}
+
+active_count() {
+  active_ids | grep -c .
+}
+
+active_list() {
+  active_ids | paste -sd ',' - | sed 's/,/, /g'
+}
+
+require_wip_slot() {
+  _rw_limit=$(wip_limit)
+  [ "$(active_count)" -lt "$_rw_limit" ] ||
+    die "WIP limit $_rw_limit reached; active: $(active_list)"
+}
+
+add_active() {
+  _aa_tmp="$ACTIVE_FILE.$$"
+  { active_ids; printf '%s\n' "$1"; } > "$_aa_tmp" && mv "$_aa_tmp" "$ACTIVE_FILE"
+}
+
+remove_active() {
+  [ -f "$ACTIVE_FILE" ] || return 0
+  _ra_tmp="$ACTIVE_FILE.$$"
+  grep -vxF "$1" "$ACTIVE_FILE" | grep -v '^[[:space:]]*$' > "$_ra_tmp"
+  if [ -s "$_ra_tmp" ]; then
+    mv "$_ra_tmp" "$ACTIVE_FILE"
+  else
+    rm -f "$_ra_tmp" "$ACTIVE_FILE"
+  fi
 }
 
 valid_id() {
@@ -441,18 +483,23 @@ cmd_init() {
 }
 
 cmd_active() {
-  if [ ! -s "$ACTIVE_FILE" ]; then
+  _ac_ids=$(active_ids)
+  if [ -z "$_ac_ids" ]; then
     printf 'No active task.\n'
     return 0
   fi
-  _ac_id=$(cat "$ACTIVE_FILE")
-  require_task "$_ac_id"
-  [ "$TASK_STATUS" = in-progress ] || die "active id $_ac_id is in $TASK_STATUS"
-  printf '%s — %s\n' "$_ac_id" "$(meta "$TASK_PATH" title)"
-  printf 'Status: %s | Priority: %s | Updated: %s\n' \
-    "$TASK_STATUS" "$(meta "$TASK_PATH" priority)" "$(meta "$TASK_PATH" updated)"
-  printf 'Path: %s\n' "$TASK_PATH"
-  printf 'Resume: %s\n' "$(resume_of "$TASK_PATH")"
+  _ac_first=yes
+  for _ac_id in $_ac_ids; do
+    require_task "$_ac_id"
+    [ "$TASK_STATUS" = in-progress ] || die "active id $_ac_id is in $TASK_STATUS"
+    [ "$_ac_first" = yes ] || printf '\n'
+    _ac_first=no
+    printf '%s — %s\n' "$_ac_id" "$(meta "$TASK_PATH" title)"
+    printf 'Status: %s | Priority: %s | Updated: %s\n' \
+      "$TASK_STATUS" "$(meta "$TASK_PATH" priority)" "$(meta "$TASK_PATH" updated)"
+    printf 'Path: %s\n' "$TASK_PATH"
+    printf 'Resume: %s\n' "$(resume_of "$TASK_PATH")"
+  done
 }
 
 cmd_path() {
@@ -514,9 +561,7 @@ cmd_add() {
 
   ensure_layout
   acquire_lock
-  if [ "$_add_start" = yes ] && [ -s "$ACTIVE_FILE" ]; then
-    die "already active: $(cat "$ACTIVE_FILE")"
-  fi
+  [ "$_add_start" = yes ] && require_wip_slot
 
   _add_blockers=''
   if [ -n "$_add_blocked_by" ]; then
@@ -572,7 +617,7 @@ cmd_add() {
   done
 
   if [ "$_add_start" = yes ]; then
-    printf '%s\n' "$_add_id" > "$ACTIVE_FILE"
+    add_active "$_add_id"
   fi
   release_lock
   index_queue
@@ -591,7 +636,7 @@ cmd_start() {
     return 0
   fi
   [ "$TASK_STATUS" = ready ] || die "$_st_id is $TASK_STATUS, not ready"
-  [ -s "$ACTIVE_FILE" ] && die "already active: $(cat "$ACTIVE_FILE")"
+  require_wip_slot
   if [ -s "$DEPS_DIR/$_st_id.blocked-by" ]; then
     while IFS= read -r _st_blocker; do
       [ -n "$_st_blocker" ] || continue
@@ -602,7 +647,7 @@ cmd_start() {
   mv "$QUEUE_DIR/ready/$_st_id.md" "$QUEUE_DIR/in-progress/$_st_id.md" ||
     die "cannot start $_st_id"
   set_meta "$QUEUE_DIR/in-progress/$_st_id.md" updated "$TODAY"
-  printf '%s\n' "$_st_id" > "$ACTIVE_FILE"
+  add_active "$_st_id"
   release_lock
   index_queue
   printf '%s\n' "$_st_id in progress"
@@ -641,9 +686,7 @@ cmd_block() {
     add_dep "$_bl_blocker" "$_bl_id"
   done
 
-  if [ "$_bl_from" = in-progress ] && [ "$(cat "$ACTIVE_FILE" 2>/dev/null)" = "$_bl_id" ]; then
-    rm -f "$ACTIVE_FILE"
-  fi
+  [ "$_bl_from" = in-progress ] && remove_active "$_bl_id"
   if [ "$_bl_from" != blocked ]; then
     mv "$QUEUE_DIR/$_bl_from/$_bl_id.md" "$QUEUE_DIR/blocked/$_bl_id.md" ||
       die "cannot block $_bl_id"
@@ -698,9 +741,7 @@ cmd_hold() {
   fi
   [ "$TASK_STATUS" = done ] && die "$_hd_id is already done"
   _hd_from=$TASK_STATUS
-  if [ "$_hd_from" = in-progress ] && [ "$(cat "$ACTIVE_FILE" 2>/dev/null)" = "$_hd_id" ]; then
-    rm -f "$ACTIVE_FILE"
-  fi
+  [ "$_hd_from" = in-progress ] && remove_active "$_hd_id"
   mv "$QUEUE_DIR/$_hd_from/$_hd_id.md" "$QUEUE_DIR/on-hold/$_hd_id.md" ||
     die "cannot hold $_hd_id"
   set_meta "$QUEUE_DIR/on-hold/$_hd_id.md" updated "$TODAY"
@@ -754,9 +795,7 @@ cmd_done() {
   _dn_from=$TASK_STATUS
   _dn_path=$TASK_PATH
 
-  if [ "$_dn_from" = in-progress ] && [ "$(cat "$ACTIVE_FILE" 2>/dev/null)" = "$_dn_id" ]; then
-    rm -f "$ACTIVE_FILE"
-  fi
+  [ "$_dn_from" = in-progress ] && remove_active "$_dn_id"
   mv "$_dn_path" "$QUEUE_DIR/done/$_dn_id.md" || die "cannot finish $_dn_id"
   _dn_path="$QUEUE_DIR/done/$_dn_id.md"
   set_meta "$_dn_path" updated "$TODAY"
@@ -891,17 +930,19 @@ cmd_verify() {
     [ -f "$_vf_file" ] || continue
     _vf_inprog=$((_vf_inprog + 1))
   done
-  [ "$_vf_inprog" -le 1 ] || fail "multiple in-progress tasks"
+  _vf_limit=$(wip_limit)
+  [ "$_vf_inprog" -le "$_vf_limit" ] ||
+    fail "$_vf_inprog in-progress tasks exceed the WIP limit of $_vf_limit"
 
-  if [ -s "$ACTIVE_FILE" ]; then
-    _vf_active=$(cat "$ACTIVE_FILE")
+  for _vf_active in $(active_ids); do
     valid_id "$_vf_active" || fail "invalid active id: $_vf_active"
     if find_task "$_vf_active"; then
       [ "$TASK_STATUS" = in-progress ] || fail "active id $_vf_active is in $TASK_STATUS"
     else
       fail "active id $_vf_active does not exist"
     fi
-  fi
+  done
+  [ -z "$(active_ids | sort | uniq -d)" ] || fail "duplicate ids in the active file"
 
   for _vf_file in "$DEPS_DIR"/*.blocked-by; do
     [ -f "$_vf_file" ] || continue

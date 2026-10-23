@@ -37,7 +37,8 @@ the project has no `.queue/` yet, run `init` first (see **Setting up a project**
 ## Typical session
 
 1. **Resume.** Run `active`. If a task is in progress, open the **Path** it prints
-   and follow the protocol below.
+   and follow the protocol below. If it lists several, ask the user which one to
+   continue; do not pick one yourself.
 2. **Nothing active?** Run `next` to see up to five ready tasks, suggest one, and
    start it only once the user agrees: `start Q-0007`.
 3. **New work agreed in conversation?** `add` it before you begin, so an
@@ -57,8 +58,8 @@ the project has no `.queue/` yet, run `init` first (see **Setting up a project**
 
 ## Resume protocol
 
-1. `sh <skill-dir>/scripts/queue.sh active` prints the active task and its
-   absolute **Path**.
+1. `sh <skill-dir>/scripts/queue.sh active` prints each active task and its
+   absolute **Path**. With more than one, ask the user which to resume.
 2. Read that one file. Follow its `**Resume:**` line and read only the paths under
    **Context to load**.
 3. Use the CLI for status changes; edit the body directly.
@@ -75,7 +76,7 @@ sh <skill-dir>/scripts/queue.sh next                   # up to five ready tasks
 sh <skill-dir>/scripts/queue.sh show Q-0001            # body plus dependencies
 sh <skill-dir>/scripts/queue.sh path Q-0001            # absolute path of the body
 sh <skill-dir>/scripts/queue.sh add "Short title" [--priority 1|2|3] [--blocked-by Q-0002,Q-0003] [--body-file path] [--resume "..."] [--start] [--on-hold]
-sh <skill-dir>/scripts/queue.sh start Q-0001           # ready -> in-progress (one at a time)
+sh <skill-dir>/scripts/queue.sh start Q-0001           # ready -> in-progress (up to the WIP limit)
 sh <skill-dir>/scripts/queue.sh block Q-0001 --by Q-0002
 sh <skill-dir>/scripts/queue.sh unblock Q-0001         # only when every blocker is done
 sh <skill-dir>/scripts/queue.sh hold Q-0001            # park any open task
@@ -121,12 +122,16 @@ fresh session can continue without searching the codebase:
 
 - **Stable IDs.** Never renumber or reuse an ID: commits, notes and other tasks
   refer to them.
-- **One task in progress.** `.queue/active` names it and `verify` enforces it, so
-  "what am I doing?" always has one answer.
+- **A small work-in-progress limit.** `wipLimit` in `.queue/config.json`
+  (default `1`) caps how many tasks are in progress; `start` and `add --start`
+  refuse past it, `.queue/active` lists the active IDs and `verify` enforces it.
+  Keep the default unless the user asks: with one task, "what am I doing?" always
+  has one answer. A task that is only waiting belongs on hold or blocked, not
+  in progress.
 - **Dependencies are explicit.** `deps/<id>.blocked-by` and `deps/<id>.blocks`
   hold both directions; use `block`/`unblock` rather than writing prose like
   "waiting on X", so `done` can unblock dependents for you.
-- **On hold is a deliberate pause.** `hold` parks any open task and clears the
+- **On hold is a deliberate pause.** `hold` parks any open task and frees its
   active slot; `resume` returns it to ready but still refuses while a blocker is
   open. Unlike `blocked`, the pause is the reason, not a dependency.
 - **Archive, don't delete.** `done/` keeps the full body; history is how the next
@@ -149,11 +154,11 @@ fresh session can continue without searching the codebase:
 .queue/
   header.md              static header for QUEUE.md
   next-id                next numeric ID
-  active                 active task ID, or absent
+  active                 active task IDs, one per line, or absent
   ready/ in-progress/ blocked/ on-hold/ done/    <id>.md task bodies
   deps/<id>.blocked-by   one blocker ID per line
   deps/<id>.blocks       one dependent ID per line
-  config.json            optional UI settings (name, layout, repositories)
+  config.json            optional settings (name, layout, repositories, wipLimit)
 ```
 
 Moving a task is one `mv`, atomic on the same filesystem. `QUEUE_DIR` and

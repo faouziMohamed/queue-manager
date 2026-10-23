@@ -54,6 +54,7 @@ export async function detectWorkspace(rootPath) {
     mode: layout === 'single-repo' ? 'repo' : 'workspace',
     view: 'list',
     design: 'jira',
+    wipLimit: 1,
     repos: repos.sort(),
     agent: {provider: 'auto', model: ''},
   }
@@ -72,6 +73,7 @@ export function normalizeWorkspaceConfig(input, fallbackName) {
       .map(value => String(value).trim())
       .filter(Boolean),
   )].slice(0, 100)
+  const wipLimit = Math.min(Math.max(Number.parseInt(input.wipLimit, 10) || 1, 1), 20)
   const providers = ['auto', 'claude-cli', 'claude-api', 'codex-cli', 'codex-api', 'deepseek-cli', 'deepseek']
   const agentInput = input.agent && typeof input.agent === 'object' ? input.agent : {}
   const agent = {
@@ -85,6 +87,7 @@ export function normalizeWorkspaceConfig(input, fallbackName) {
     mode: layout === 'single-repo' ? 'repo' : 'workspace',
     view,
     design,
+    wipLimit,
     repos,
     agent,
   }
@@ -110,6 +113,7 @@ export async function writeWorkspaceConfig(rootPath, config) {
       layout: config.layout,
       view: config.view,
       design: config.design,
+      wipLimit: config.wipLimit,
       repos: config.repos,
       agent: config.agent,
     }, null, 2)}\n`,

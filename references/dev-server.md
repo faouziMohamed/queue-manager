@@ -32,7 +32,7 @@ shell.
 
 - Read side: tasks, statuses, dependencies, frontmatter and bodies.
 - Write side: `start`, `block`, `unblock`, `done` and `add` call `queue.sh`, so
-  the lock, single-in-progress rule, dependency edges, gate task and index stay
+  the lock, work-in-progress limit, dependency edges, gate task and index stay
   authoritative.
 - Body edits write the task Markdown file atomically below its frontmatter; done
   records are immutable.
@@ -40,7 +40,8 @@ shell.
   name plus repository chips in workspace and monorepo layouts.
 - On a folder without `.queue`, the UI offers initialization (the same as
   `queue.sh init`) and writes `.queue/config.json`. The gear button edits the
-  name, layout, repository list and default assistant later.
+  name, layout, repository list, work-in-progress limit (`wipLimit`, 1–20,
+  default 1) and default assistant later.
 - It runs no Git or database commands and refuses non-loopback clients.
 
 ## Board and list views
@@ -61,7 +62,8 @@ the sidebar keeps the same navigation and the board remains available from its
 The board shows one column per status. Cards open the normal task drawer.
 Drag a card to transition it through the CLI:
 
-- **Ready → In progress** calls `start`.
+- **Ready → In progress** calls `start`; it fails once the work-in-progress
+  limit is reached.
 - **Blocked → Ready** calls `unblock`; it fails while a blocker is still open.
 - **Any open task → Blocked** opens the blocker picker.
 - **Any open task → On hold** calls `hold`; **On hold → Ready** calls `resume`

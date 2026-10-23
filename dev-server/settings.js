@@ -14,6 +14,7 @@ export function initSettings({loadTasks}) {
     form.elements.view.value = workspace.view || 'list'
     form.elements.design.value = workspace.design || 'jira'
     form.elements.layout.value = workspace.layout || 'single-repo'
+    form.elements.wipLimit.value = String(workspace.wipLimit || 1)
     form.elements.repos.value = (workspace.repos || []).join('\n')
     form.elements.repos.disabled = form.elements.layout.value === 'single-repo'
     loadAgentAvailability(workspace.agent?.provider || 'auto')
@@ -37,6 +38,7 @@ export function initSettings({loadTasks}) {
       view: data.get('view') === 'board' ? 'board' : 'list',
       design: data.get('design') === 'classic' ? 'classic' : 'jira',
       layout: data.get('layout'),
+      wipLimit: Number(data.get('wipLimit')) || 1,
       repos: String(data.get('repos') || '').split('\n').map(value => value.trim()).filter(Boolean),
       agent: {
         provider,

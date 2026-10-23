@@ -8,6 +8,7 @@ const sections = [
   {id: 'in-progress', label: 'In progress', icon: 'i-play', emptyTitle: 'No task is running', empty: 'Nothing is being processed right now.'},
   {id: 'ready', label: 'Ready', icon: 'i-inbox', emptyTitle: 'The ready queue is empty', empty: 'Create a task, or unblock a dependency.'},
   {id: 'blocked', label: 'Blocked', icon: 'i-block', emptyTitle: 'Nothing is blocked', empty: 'No task is waiting on another.'},
+  {id: 'on-hold', label: 'On hold', icon: 'i-pause', emptyTitle: 'Nothing is on hold', empty: 'No task is paused right now.'},
   {id: 'awaiting', label: 'Awaiting production', icon: 'i-gate', emptyTitle: 'No production waits', empty: 'No task is parked behind the production gate.'},
   {id: 'done', label: 'Done', icon: 'i-check', emptyTitle: 'No completed records', empty: 'Closed tasks are kept here, out of the main queue.'},
   {id: 'pitfalls', label: 'Pitfalls', icon: 'i-alert', view: true},
@@ -16,11 +17,12 @@ const sections = [
 ]
 
 const $ = selector => document.querySelector(selector)
-const listSectionIds = ['in-progress', 'ready', 'blocked', 'awaiting', 'done']
+const listSectionIds = ['in-progress', 'ready', 'blocked', 'on-hold', 'awaiting', 'done']
 const statusTokens = {
   'in-progress': '--status-in-progress',
   ready: '--status-ready',
   blocked: '--status-blocked',
+  'on-hold': '--status-on-hold',
   awaiting: '--status-awaiting',
   done: '--status-done',
 }
@@ -48,6 +50,15 @@ function displayDate(value) {
 
 function inlineTitle(value) {
   return escapeHtml(value).replace(/`([^`]+)`/g, '<code>$1</code>')
+}
+
+export function dodChip(task) {
+  const dod = task.dod
+  if (!dod || !dod.present || dod.total === 0) return ''
+  const complete = dod.done === dod.total
+  return `<span class="dod-chip${complete ? ' is-complete' : ''}" title="Definition of done: ${dod.done} of ${dod.total} checked">
+    <svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>DoD ${dod.done}/${dod.total}
+  </span>`
 }
 
 function renderAppHeader(state, section, onTaskPage) {
@@ -151,6 +162,10 @@ export function detailActions(task) {
   if (task.status === 'ready') buttons.push('<button class="btn primary" type="button" data-detail-action="start">Start</button>')
   if (task.status === 'in-progress') buttons.push('<button class="btn primary" type="button" data-detail-action="done">Mark done</button>')
   if (task.status === 'blocked') buttons.push('<button class="btn" type="button" data-detail-action="unblock">Unblock</button>')
+  if (task.status === 'on-hold') buttons.push('<button class="btn primary" type="button" data-detail-action="resume">Resume</button>')
+  if (task.status === 'ready' || task.status === 'in-progress' || task.status === 'blocked') {
+    buttons.push('<button class="btn" type="button" data-detail-action="hold">Hold</button>')
+  }
   if (task.status === 'ready' || task.status === 'in-progress') {
     buttons.push('<button class="btn" type="button" data-detail-action="block">Block</button>')
   }
@@ -198,6 +213,7 @@ function isAwaiting(task) {
 function sectionTasks(state, section) {
   if (section === 'awaiting') return state.tasks.filter(task => isAwaiting(task))
   if (section === 'blocked') return state.tasks.filter(task => task.status === 'blocked' && !isAwaiting(task))
+  if (section === 'on-hold') return state.tasks.filter(task => task.status === 'on-hold' && !isAwaiting(task))
   return state.tasks.filter(task => task.status === section)
 }
 
@@ -341,6 +357,8 @@ function taskRow(state, task) {
     : ''
   const meta = task.blockedBy.map(blocker => relationLink('blocked', blocker))
   if (task.awaitingProduction) meta.push('<span class="chip gate">production</span>')
+  const dod = dodChip(task)
+  if (dod) meta.push(dod)
   const metaHtml = meta.length > 0 ? `<span class="task-meta">${meta.join('')}</span>` : ''
   return `<article class="task" data-status="${escapeHtml(task.status)}" data-awaiting="${task.awaitingProduction}">
     <span class="task-rail" aria-hidden="true"></span>

@@ -80,4 +80,5 @@ it, and leaves the rest of the body untouched.
   or run commands.
 - `codex-cli` / `codex-api` run `codex exec --sandbox read-only --ephemeral`.
 - Every proposed change (new task, section update, body replacement, status
-  action) is shown as a card and applied only when the user clicks Apply.
+  action such as start, block, hold, resume or done) is shown as a card and
+  applied only when the user clicks Apply.

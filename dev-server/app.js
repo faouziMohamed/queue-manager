@@ -64,6 +64,10 @@ function handleBoardMove(task, target) {
   }
   if (target === 'in-progress') {
     if (task.status === 'in-progress') return
+    if (task.status === 'on-hold') {
+      showToast('Resume the task before starting it.', 'error')
+      return
+    }
     if (task.status === 'ready' && !task.awaitingProduction) {
       actions.handleDetailAction(task, 'start')
       return
@@ -79,6 +83,10 @@ function handleBoardMove(task, target) {
       actions.handleDetailAction(task, 'unblock')
       return
     }
+    if (task.status === 'on-hold') {
+      actions.handleDetailAction(task, 'resume')
+      return
+    }
     showToast(task.status === 'in-progress'
       ? 'An in-progress task can only be done or blocked.'
       : 'Only a blocked task can move back to ready.', 'error')
@@ -86,7 +94,16 @@ function handleBoardMove(task, target) {
   }
   if (target === 'blocked') {
     if (task.status === 'blocked') return
+    if (task.status === 'on-hold') {
+      showToast('Resume the task before blocking it.', 'error')
+      return
+    }
     actions.handleDetailAction(task, 'block')
+    return
+  }
+  if (target === 'on-hold') {
+    if (task.status === 'on-hold') return
+    actions.handleDetailAction(task, 'hold')
     return
   }
   if (target === 'done') actions.handleDetailAction(task, 'done')

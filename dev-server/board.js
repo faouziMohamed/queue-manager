@@ -1,5 +1,5 @@
 import {statusKey, statusOrder} from './insights.js'
-import {escapeHtml} from './render.js'
+import {dodChip, escapeHtml} from './render.js'
 
 let root = null
 let callbacks = {}
@@ -193,7 +193,8 @@ function card(task, state, canDrag) {
   const gate = task.awaitingProduction
     ? '<span class="kanban-label gate">awaiting production</span>'
     : ''
-  const labels = repo || blocked || gate ? `<div class="kanban-card-labels">${repo}${blocked}${gate}</div>` : ''
+  const dod = dodChip(task)
+  const labels = repo || blocked || gate || dod ? `<div class="kanban-card-labels">${repo}${blocked}${gate}${dod}</div>` : ''
   const avatar = state.workspace.mode === 'workspace'
     ? `<span class="kanban-avatar" title="${escapeHtml(task.repo || 'queue')}" style="--avatar-hue:${hue}">${escapeHtml(initials(task.repo || 'queue'))}</span>`
     : ''

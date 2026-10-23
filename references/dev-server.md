@@ -54,9 +54,9 @@ layout). Queue settings → **Queue view** chooses the default **List** or
 In Jira-style, the project header and tabs (Board, List, Insights, Pitfalls,
 Graph) sit above every queue page and the topbar carries search, settings,
 theme and New task. The List view adds status pills for In progress, Ready,
-Blocked, Awaiting production and Done, with live counts. In Classic, the sidebar
-keeps the same navigation and the board remains available from its **Board**
-entry; `b` opens the board in either design.
+Blocked, On hold, Awaiting production and Done, with live counts. In Classic,
+the sidebar keeps the same navigation and the board remains available from its
+**Board** entry; `b` opens the board in either design.
 
 The board shows one column per status. Cards open the normal task drawer.
 Drag a card to transition it through the CLI:
@@ -64,6 +64,8 @@ Drag a card to transition it through the CLI:
 - **Ready → In progress** calls `start`.
 - **Blocked → Ready** calls `unblock`; it fails while a blocker is still open.
 - **Any open task → Blocked** opens the blocker picker.
+- **Any open task → On hold** calls `hold`; **On hold → Ready** calls `resume`
+  (which still fails while a blocker is open).
 - **Any open task → Done** opens the shipped-summary dialog.
 - **Awaiting production** is derived from a production gate, so it is not a
   meaningful drop target; the UI explains that instead of moving the task.
@@ -72,6 +74,17 @@ Drag a card to transition it through the CLI:
 repository filter narrows every column. On touch devices the columns swipe
 horizontally, dragging is disabled, and tapping a card opens the drawer where
 the same transitions are available.
+
+## Definition of done
+
+A task body may carry an optional `## Definition of done` checklist (the task
+template includes one). The UI reads its top-level `- [ ]` / `- [x]` items; plain
+`-` bullets count as unchecked:
+
+- Board cards and list rows show a **DoD 2/4** chip, green when complete.
+- The task page side panel shows a progress bar and the checklist.
+- **Mark done** lists any unchecked items before you confirm, so a task is not
+  closed with its quality bar silently unmet. It warns; it does not block.
 
 ## Task drawer and page
 
@@ -101,9 +114,9 @@ the same transitions are available.
   answers), **Before continuing** (a checklist of what is still needed) and
   **Open questions**. **Apply** replaces that one section of the task file, or
   adds it if missing, and keeps the rest of the body.
-- Every view has a real URL (`/ready`, `/insights`, `/graph`, `/tasks/Q-0001`),
-  so refresh, back/forward, new tabs and copied links work. Old `#task/Q-0001`
-  links still open the drawer.
+- Every view has a real URL (`/ready`, `/on-hold`, `/insights`, `/graph`,
+  `/tasks/Q-0001`), so refresh, back/forward, new tabs and copied links work.
+  Old `#task/Q-0001` links still open the drawer.
 - Edit with Ctrl+S to save and Esc to leave; navigating away with unsaved
   edits is refused with a notice, closing the tab asks first, and chat updates
   wait until body edits are saved or cancelled.
@@ -144,9 +157,9 @@ files into pointers, so the whole workspace shares one searchable record.
   its README) and load only when one of these views opens, so the UI stays
   offline-capable with no build step.
 - Status colors are the `--status-*` tokens in `styles.css` (blue in progress,
-  green ready, red blocked, purple awaiting production, gray done). The graph
-  legend, node borders, task rails and insights all read them through
-  `statusOrder`, so changing one token updates every view.
+  green ready, red blocked, amber on hold, purple awaiting production, gray
+  done). The graph legend, node borders, task rails and insights all read them
+  through `statusOrder`, so changing one token updates every view.
 
 ## Files and privacy
 

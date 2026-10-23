@@ -1,4 +1,4 @@
-const sectionIds = ['board', 'in-progress', 'ready', 'blocked', 'awaiting', 'done', 'pitfalls', 'insights', 'graph']
+const sectionIds = ['board', 'in-progress', 'ready', 'blocked', 'on-hold', 'awaiting', 'done', 'pitfalls', 'insights', 'graph']
 
 const taskIdPattern = /^Q-\d{4,}$/
 

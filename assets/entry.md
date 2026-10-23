@@ -28,6 +28,14 @@ Goal and agreed scope, in a few short sentences.
 
 - [ ] A verifiable outcome, not an activity.
 
+## Definition of done
+
+Optional. Delete this section when the project's standing definition of done
+already covers the task.
+
+- [ ] Project definition of done met (link it, e.g. `CLAUDE.md` § Definition of done).
+- [ ] Task-specific bar, e.g. tests cover the new branch, docs updated, reviewed.
+
 ## Related pitfalls
 
 - Optional: link the project's known-traps doc if it has one, e.g.

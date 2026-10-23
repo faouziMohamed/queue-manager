@@ -1,6 +1,6 @@
 ---
 name: queue-manager
-description: A plain-file task queue that lives in the repository (.queue/ plus a generated QUEUE.md) so work survives across agent sessions. Use it whenever the user wants to resume or "pick up where we left off", asks what to work on next, agrees on work that should be tracked for later, starts, blocks, unblocks or finishes a task, records progress or decisions on a task, sets dependencies or a production gate, regenerates or verifies QUEUE.md, or wants to open the queue's browser UI (task pages, clarification chat, pitfalls browser, insights, dependency graph). Use it whenever the user asks about a known trap, a pitfall, `PITFALLS.md` or a `PIT-###` lesson. Use it even when the user just says "add this to the queue", "what's next?" or "continue". Not for Jira, Linear or GitHub Issues unless the user wants the local queue too.
+description: A plain-file task queue that lives in the repository (.queue/ plus a generated QUEUE.md) so work survives across agent sessions. Use it whenever the user wants to resume or "pick up where we left off", asks what to work on next, agrees on work that should be tracked for later, starts, blocks, unblocks, holds, resumes or finishes a task, records progress or decisions on a task, sets dependencies or a production gate, regenerates or verifies QUEUE.md, or wants to open the queue's browser UI (task pages, clarification chat, pitfalls browser, insights, dependency graph). Use it whenever the user asks about a known trap, a pitfall, `PITFALLS.md` or a `PIT-###` lesson. Use it even when the user just says "add this to the queue", "what's next?" or "continue". Not for Jira, Linear or GitHub Issues unless the user wants the local queue too.
 license: MIT
 compatibility: POSIX shell for the CLI. The optional browser UI needs Node.js 22.13+ and curl.
 metadata:
@@ -48,7 +48,12 @@ the project has no `.queue/` yet, run `init` first (see **Setting up a project**
    the `**Resume:**` line pointing at the very next action.
 5. **Stuck on something else?** `block Q-0007 --by Q-0003`. When the blocker is
    done, `done` unblocks dependents automatically.
-6. **Finished?** `done Q-0007 --summary "What shipped and why it matters"`.
+6. **Pausing work for now?** `hold Q-0007` parks it out of Ready and `next`;
+   `resume Q-0007` returns it to Ready once its blockers are done.
+7. **Finished?** Check the acceptance criteria and, when present, the
+   **Definition of done**; then `done Q-0007 --summary "What shipped and why it
+   matters"`. An unchecked item means the task is not done: finish it, or record
+   why it is deferred under **What is left** or **Known, accepted**.
 
 ## Resume protocol
 
@@ -69,10 +74,12 @@ sh <skill-dir>/scripts/queue.sh active                 # active task and its pat
 sh <skill-dir>/scripts/queue.sh next                   # up to five ready tasks
 sh <skill-dir>/scripts/queue.sh show Q-0001            # body plus dependencies
 sh <skill-dir>/scripts/queue.sh path Q-0001            # absolute path of the body
-sh <skill-dir>/scripts/queue.sh add "Short title" [--priority 1|2|3] [--blocked-by Q-0002,Q-0003] [--body-file path] [--resume "..."] [--start]
+sh <skill-dir>/scripts/queue.sh add "Short title" [--priority 1|2|3] [--blocked-by Q-0002,Q-0003] [--body-file path] [--resume "..."] [--start] [--on-hold]
 sh <skill-dir>/scripts/queue.sh start Q-0001           # ready -> in-progress (one at a time)
 sh <skill-dir>/scripts/queue.sh block Q-0001 --by Q-0002
 sh <skill-dir>/scripts/queue.sh unblock Q-0001         # only when every blocker is done
+sh <skill-dir>/scripts/queue.sh hold Q-0001            # park any open task
+sh <skill-dir>/scripts/queue.sh resume Q-0001          # on hold -> ready, once blockers are done
 sh <skill-dir>/scripts/queue.sh done Q-0001 --summary "..."
 sh <skill-dir>/scripts/queue.sh deps Q-0001            # both dependency directions
 sh <skill-dir>/scripts/queue.sh list [--all]           # table of open (or all) tasks
@@ -99,6 +106,11 @@ fresh session can continue without searching the codebase:
 - **Acceptance criteria and progress as checkboxes.** `- [x]` means done and
   verified (say how); `- [ ]` means open. Checkboxes are easier to scan and update
   than prose.
+- **Definition of done (optional)** — the quality bar every task must clear
+  (tests, lint, docs, review), as opposed to acceptance criteria, which say what
+  this task must achieve. Link the project's standing definition of done (for
+  example in `CLAUDE.md`) and add only task-specific items; drop the section when
+  the project's definition already covers the task.
 - **Settled decisions** with who decided and when, so they are not re-argued.
 - **Related pitfalls** — link the project's known-traps file by `PIT-` ID when a
   recorded trap applies, instead of repeating its explanation in the body.
@@ -114,6 +126,9 @@ fresh session can continue without searching the codebase:
 - **Dependencies are explicit.** `deps/<id>.blocked-by` and `deps/<id>.blocks`
   hold both directions; use `block`/`unblock` rather than writing prose like
   "waiting on X", so `done` can unblock dependents for you.
+- **On hold is a deliberate pause.** `hold` parks any open task and clears the
+  active slot; `resume` returns it to ready but still refuses while a blocker is
+  open. Unlike `blocked`, the pause is the reason, not a dependency.
 - **Archive, don't delete.** `done/` keeps the full body; history is how the next
   person learns what was decided.
 - **`QUEUE.md` is generated.** Edit `.queue/header.md` for its static header and
@@ -135,7 +150,7 @@ fresh session can continue without searching the codebase:
   header.md              static header for QUEUE.md
   next-id                next numeric ID
   active                 active task ID, or absent
-  ready/ in-progress/ blocked/ done/    <id>.md task bodies
+  ready/ in-progress/ blocked/ on-hold/ done/    <id>.md task bodies
   deps/<id>.blocked-by   one blocker ID per line
   deps/<id>.blocks       one dependent ID per line
   config.json            optional UI settings (name, layout, repositories)

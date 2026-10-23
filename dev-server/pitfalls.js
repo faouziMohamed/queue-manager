@@ -207,7 +207,7 @@ function field(label, value) {
 }
 
 function taskChip(task) {
-  const status = ['in-progress', 'ready', 'blocked', 'done'].includes(task.status) ? task.status : ''
+  const status = ['in-progress', 'ready', 'blocked', 'on-hold', 'done'].includes(task.status) ? task.status : ''
   return `<a class="chip task-chip${status ? ` status-${status}` : ''}" href="/tasks/${escapeHtml(task.id)}" data-task-link="${escapeHtml(task.id)}" title="${escapeHtml(task.title)}">${escapeHtml(task.id)} · ${escapeHtml(task.title)}</a>`
 }
 

@@ -38,7 +38,7 @@ DEFAULT_HEADER="$SKILL_DIR/assets/header.md"
 NEXT_ID_FILE="$QUEUE_DIR/next-id"
 ACTIVE_FILE="$QUEUE_DIR/active"
 DEPS_DIR="$QUEUE_DIR/deps"
-STATUSES="ready in-progress blocked done"
+STATUSES="ready in-progress blocked on-hold done"
 TODAY=$(date +%Y-%m-%d)
 
 die() { printf 'queue: %s\n' "$*" >&2; exit 1; }
@@ -56,9 +56,12 @@ usage() {
     --body-file path             Use a Markdown body template
     --resume "text"              Override the Resume line
     --start                      Start immediately (only if unblocked)
+    --on-hold                    Create the task on hold
   start <id>                     Move a ready task to in-progress
   block <id> --by Q-0001,...     Add blockers and mark it blocked
   unblock <id>                   Move to ready once every blocker is done
+  hold <id>                      Park an open task on hold
+  resume <id>                    Return a held task to ready
   done <id> [--summary "text"]   Mark done and auto-unblock dependents
   next                           Show up to five ready tasks
   list [--all]                   Print the queue table
@@ -72,7 +75,7 @@ EOF
 
 ensure_layout() {
   mkdir -p "$QUEUE_DIR/ready" "$QUEUE_DIR/in-progress" "$QUEUE_DIR/blocked" \
-    "$QUEUE_DIR/done" "$DEPS_DIR" || die "cannot create queue layout"
+    "$QUEUE_DIR/on-hold" "$QUEUE_DIR/done" "$DEPS_DIR" || die "cannot create queue layout"
   [ -f "$NEXT_ID_FILE" ] || printf '1\n' > "$NEXT_ID_FILE"
   for _ignored in agent.env chats.sqlite chats.sqlite-wal chats.sqlite-shm dev-server.pid dev-server.port dev-server.log; do
     grep -qxF "$_ignored" "$QUEUE_DIR/.gitignore" 2>/dev/null || printf '%s\n' "$_ignored" >> "$QUEUE_DIR/.gitignore"
@@ -113,7 +116,7 @@ valid_id() {
 
 find_task() {
   _find_id=$1
-  for _find_status in ready in-progress blocked done; do
+  for _find_status in ready in-progress blocked on-hold done; do
     if [ -f "$QUEUE_DIR/$_find_status/$_find_id.md" ]; then
       TASK_STATUS=$_find_status
       TASK_PATH="$QUEUE_DIR/$_find_status/$_find_id.md"
@@ -252,6 +255,12 @@ default_body() {
 
 - [ ] ...
 
+## Definition of done
+
+Optional; delete when the project's definition of done covers this task.
+
+- [ ] ...
+
 ## Related pitfalls
 
 ...
@@ -305,7 +314,7 @@ index_queue() {
 
     printf '\n## Index\n\n'
     _iq_rows=0
-    for _iq_status in in-progress ready blocked; do
+    for _iq_status in in-progress ready blocked on-hold; do
       for _iq_file in "$QUEUE_DIR/$_iq_status"/*.md; do
         [ -f "$_iq_file" ] || continue
         if [ "$_iq_rows" -eq 0 ]; then
@@ -363,6 +372,21 @@ index_queue() {
     done
     [ "$_iq_blocked" -eq 0 ] && printf '_No blocked tasks._\n'
 
+    printf '\n## On hold\n\n'
+    _iq_held=0
+    for _iq_file in "$QUEUE_DIR/on-hold"/*.md; do
+      [ -f "$_iq_file" ] || continue
+      _iq_held=$((_iq_held + 1))
+      _iq_id=$(basename "$_iq_file" .md)
+      if [ -s "$DEPS_DIR/$_iq_id.blocked-by" ]; then
+        _iq_by=$(tr '\n' ',' < "$DEPS_DIR/$_iq_id.blocked-by" | sed 's/,$//')
+        printf '%s\n' "- $_iq_id — $(meta "$_iq_file" title) — blocked by $_iq_by"
+      else
+        printf '%s\n' "- $_iq_id — $(meta "$_iq_file" title)"
+      fi
+    done
+    [ "$_iq_held" -eq 0 ] && printf '_No tasks on hold._\n'
+
     printf '\n## Awaiting production\n\n'
     _iq_prod_gates=''
     for _iq_status in $STATUSES; do
@@ -373,7 +397,7 @@ index_queue() {
       done
     done
     _iq_awaiting=''
-    for _iq_status in in-progress ready blocked; do
+    for _iq_status in in-progress ready blocked on-hold; do
       for _iq_file in "$QUEUE_DIR/$_iq_status"/*.md; do
         [ -f "$_iq_file" ] || continue
         _iq_id=$(basename "$_iq_file" .md)
@@ -462,6 +486,7 @@ cmd_add() {
   _add_body_file=''
   _add_resume=''
   _add_start=no
+  _add_on_hold=no
 
   while [ $# -gt 0 ]; do
     case "$1" in
@@ -470,6 +495,7 @@ cmd_add() {
       --body-file) [ $# -ge 2 ] || die '--body-file needs a value'; _add_body_file=$2; shift 2 ;;
       --resume) [ $# -ge 2 ] || die '--resume needs a value'; _add_resume=$2; shift 2 ;;
       --start) _add_start=yes; shift ;;
+      --on-hold) _add_on_hold=yes; shift ;;
       *) _add_title="$_add_title $1"; shift ;;
     esac
   done
@@ -478,6 +504,12 @@ cmd_add() {
   case "$_add_priority" in 1|2|3) ;; *) die '--priority must be 1, 2 or 3' ;; esac
   if [ "$_add_start" = yes ] && [ -n "$_add_blocked_by" ]; then
     die 'cannot start a blocked task'
+  fi
+  if [ "$_add_on_hold" = yes ] && [ "$_add_start" = yes ]; then
+    die 'cannot start a task on hold'
+  fi
+  if [ "$_add_on_hold" = yes ] && [ -n "$_add_blocked_by" ]; then
+    die 'cannot create a held task with blockers; add the task, block it, then hold it'
   fi
 
   ensure_layout
@@ -502,6 +534,8 @@ cmd_add() {
     _add_status=in-progress
   elif [ -n "$_add_blocked_by" ]; then
     _add_status=blocked
+  elif [ "$_add_on_hold" = yes ]; then
+    _add_status=on-hold
   else
     _add_status=ready
   fi
@@ -592,6 +626,7 @@ cmd_block() {
   require_task "$_bl_id"
   [ "$TASK_STATUS" = done ] && die "$_bl_id is already done"
   _bl_from=$TASK_STATUS
+  [ "$_bl_from" = on-hold ] && die "$_bl_id is on hold; resume it before blocking"
 
   _bl_blockers=''
   for _bl_blocker in $(printf '%s' "$_bl_by" | tr ',' ' '); do
@@ -650,6 +685,52 @@ cmd_unblock() {
   printf '%s ready\n' "$_ub_id"
 }
 
+cmd_hold() {
+  [ $# -ge 1 ] || die 'hold requires a task id'
+  _hd_id=$1
+  ensure_layout
+  acquire_lock
+  require_task "$_hd_id"
+  if [ "$TASK_STATUS" = on-hold ]; then
+    release_lock
+    printf '%s already on hold\n' "$_hd_id"
+    return 0
+  fi
+  [ "$TASK_STATUS" = done ] && die "$_hd_id is already done"
+  _hd_from=$TASK_STATUS
+  if [ "$_hd_from" = in-progress ] && [ "$(cat "$ACTIVE_FILE" 2>/dev/null)" = "$_hd_id" ]; then
+    rm -f "$ACTIVE_FILE"
+  fi
+  mv "$QUEUE_DIR/$_hd_from/$_hd_id.md" "$QUEUE_DIR/on-hold/$_hd_id.md" ||
+    die "cannot hold $_hd_id"
+  set_meta "$QUEUE_DIR/on-hold/$_hd_id.md" updated "$TODAY"
+  release_lock
+  index_queue
+  printf '%s on hold\n' "$_hd_id"
+}
+
+cmd_resume() {
+  [ $# -ge 1 ] || die 'resume requires a task id'
+  _rs_id=$1
+  ensure_layout
+  acquire_lock
+  require_task "$_rs_id"
+  [ "$TASK_STATUS" = on-hold ] || die "$_rs_id is $TASK_STATUS, not on hold"
+  if [ -s "$DEPS_DIR/$_rs_id.blocked-by" ]; then
+    while IFS= read -r _rs_blocker; do
+      [ -n "$_rs_blocker" ] || continue
+      find_task "$_rs_blocker" || die "unknown blocker: $_rs_blocker"
+      [ "$TASK_STATUS" = done ] || die "$_rs_id is blocked by $_rs_blocker"
+    done < "$DEPS_DIR/$_rs_id.blocked-by"
+  fi
+  mv "$QUEUE_DIR/on-hold/$_rs_id.md" "$QUEUE_DIR/ready/$_rs_id.md" ||
+    die "cannot resume $_rs_id"
+  set_meta "$QUEUE_DIR/ready/$_rs_id.md" updated "$TODAY"
+  release_lock
+  index_queue
+  printf '%s ready\n' "$_rs_id"
+}
+
 cmd_done() {
   [ $# -ge 1 ] || die 'done requires a task id'
   _dn_id=$1
@@ -691,6 +772,7 @@ cmd_done() {
       remove_dep "$_dn_id" "$_dn_dependent"
       if [ ! -s "$DEPS_DIR/$_dn_dependent.blocked-by" ]; then
         if find_task "$_dn_dependent"; then
+          # Held dependents stay on hold; only blocked ones become ready.
           if [ "$TASK_STATUS" = blocked ]; then
             mv "$QUEUE_DIR/blocked/$_dn_dependent.md" "$QUEUE_DIR/ready/$_dn_dependent.md"
             set_meta "$QUEUE_DIR/ready/$_dn_dependent.md" updated "$TODAY"
@@ -735,7 +817,7 @@ cmd_list() {
   printf '| ID | Status | P | Updated | Title | Resume |\n'
   printf '|---|---|---|---|---|---|\n'
   _ls_rows=0
-  for _ls_status in in-progress ready blocked done; do
+  for _ls_status in in-progress ready blocked on-hold done; do
     [ "$_ls_all" = yes ] || [ "$_ls_status" != done ] || continue
     for _ls_file in "$QUEUE_DIR/$_ls_status"/*.md; do
       [ -f "$_ls_file" ] || continue
@@ -937,6 +1019,8 @@ case "$cmd" in
   start) cmd_start "$@" ;;
   block) cmd_block "$@" ;;
   unblock) cmd_unblock "$@" ;;
+  hold) cmd_hold "$@" ;;
+  resume) cmd_resume "$@" ;;
   done) cmd_done "$@" ;;
   next) cmd_next ;;
   list) cmd_list "$@" ;;

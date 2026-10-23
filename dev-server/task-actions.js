@@ -35,12 +35,23 @@ export function initTaskActions({loadTasks, reloadActiveTask, openPeek, openSett
   function openDoneDialog(id) {
     state.doneTarget = id
     $('#done-form').elements.summary.value = ''
+    const task = state.tasks.find(item => item.id === id)
+    const open = task?.dod?.present ? task.dod.items.filter(item => !item.done) : []
+    const warning = $('#done-dod')
+    warning.hidden = open.length === 0
+    warning.innerHTML = open.length
+      ? `<strong>${open.length} Definition of done item${open.length === 1 ? '' : 's'} not checked</strong>
+        <ul>${open.map(item => `<li>${escapeHtml(item.text).replace(/`([^`]+)`/g, '<code>$1</code>')}</li>`).join('')}</ul>
+        <p>Finish them, or record why they are deferred under What is left before closing.</p>`
+      : ''
     if (!doneDialog.open) doneDialog.showModal()
   }
 
   function handleDetailAction(task, action) {
     if (action === 'start') runAction(task.id, {action: 'start'}, 'Task started.')
     if (action === 'unblock') runAction(task.id, {action: 'unblock'}, 'Task unblocked.')
+    if (action === 'hold') runAction(task.id, {action: 'hold'}, 'Task put on hold.')
+    if (action === 'resume') runAction(task.id, {action: 'resume'}, 'Task resumed.')
     if (action === 'block') openBlockDialog(task.id)
     if (action === 'done') openDoneDialog(task.id)
   }

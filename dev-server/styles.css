@@ -26,6 +26,8 @@
   --status-ready-bg: #e6f4ea;
   --status-blocked: #cf222e;
   --status-blocked-bg: #fdecea;
+  --status-on-hold: #9a6700;
+  --status-on-hold-bg: #fff8c5;
   --status-awaiting: #8250df;
   --status-awaiting-bg: #f3eefe;
   --status-done: #6e7781;
@@ -69,6 +71,8 @@
   --status-ready-bg: #12261a;
   --status-blocked: #ff7b72;
   --status-blocked-bg: #2a1716;
+  --status-on-hold: #d29922;
+  --status-on-hold-bg: #2e2410;
   --status-awaiting: #d2a8ff;
   --status-awaiting-bg: #241a35;
   --status-done: #8b949e;
@@ -107,6 +111,8 @@
     --status-ready-bg: #12261a;
     --status-blocked: #ff7b72;
     --status-blocked-bg: #2a1716;
+    --status-on-hold: #d29922;
+    --status-on-hold-bg: #2e2410;
     --status-awaiting: #d2a8ff;
     --status-awaiting-bg: #241a35;
     --status-done: #8b949e;
@@ -369,6 +375,7 @@ body .sidebar { display: none; }
 .task[data-status="in-progress"] .task-rail { background: var(--status-in-progress); }
 .task[data-status="ready"] .task-rail { background: var(--status-ready); }
 .task[data-status="blocked"] .task-rail { background: var(--status-blocked); }
+.task[data-status="on-hold"] .task-rail { background: var(--status-on-hold); }
 .task[data-awaiting="true"] .task-rail { background: var(--status-awaiting); }
 .task[data-status="done"] .task-rail { background: var(--status-done); }
 .task-body { min-width: 0; padding: 11px 0 11px 14px; }
@@ -712,12 +719,87 @@ body .sidebar { display: none; }
 .session-viewer-head h2 { font-size: 17px; line-height: 1.3; margin: 2px 0; overflow-wrap: anywhere; }
 .session-resume { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 10px; border-radius: var(--radius); background: var(--surface-2); }
 .session-resume code { flex: 1 1 240px; min-width: 0; overflow-x: auto; font-size: 11.5px; white-space: nowrap; }
-.session-messages { display: grid; gap: 12px; overflow: auto; padding-right: 4px; }
-.session-message { padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius); }
-.session-message.user { background: var(--surface-2); }
-.session-message.mentions { border-color: color-mix(in srgb, var(--brand) 45%, var(--line)); }
-.session-message header { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 6px; color: var(--muted); font-size: 11.5px; }
-.session-message .markdown { font-size: 13px; }
+.session-messages { display: flex; flex-direction: column; gap: 10px; overflow: auto; padding: 4px 4px 4px 0; }
+.session-message {
+  align-self: flex-start;
+  max-width: min(78%, 640px);
+  padding: 9px 13px 10px;
+  border: 1px solid var(--line);
+  border-radius: 16px 16px 16px 4px;
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+  color: var(--ink);
+}
+.session-message.user {
+  align-self: flex-end;
+  border-color: transparent;
+  border-radius: 16px 16px 4px 16px;
+  background: var(--brand);
+  color: #fff;
+}
+.session-message.user header { color: rgb(255 255 255 / 0.78); }
+.session-message.user .markdown,
+.session-message.user .markdown a { color: #fff; }
+.session-message.user .markdown code { border-color: rgb(255 255 255 / 0.3); background: rgb(255 255 255 / 0.16); color: #fff; }
+.session-message.mentions { box-shadow: 0 0 0 2px color-mix(in srgb, var(--warn) 55%, transparent); }
+.session-message header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 4px; color: var(--muted); font-size: 11px; }
+.session-message header strong { font-weight: 650; }
+.session-message .markdown { max-height: none; overflow: visible; padding-right: 0; font-size: 13px; line-height: 1.55; }
+.session-message .markdown > :last-child { margin-bottom: 0; }
+.session-steps {
+  align-self: flex-start;
+  max-width: min(78%, 640px);
+  color: var(--muted);
+  font-size: 12px;
+}
+.session-steps > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-2);
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+.session-steps > summary::-webkit-details-marker { display: none; }
+.session-steps > summary:hover { border-color: var(--line-strong); color: var(--ink); }
+.session-steps[open] > summary { color: var(--ink); }
+.session-steps-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--status-ready); }
+.session-steps.has-error .session-steps-dot { background: var(--status-blocked); }
+.session-steps-list { display: grid; gap: 4px; margin: 6px 0 2px 12px; padding-left: 12px; border-left: 2px solid var(--line); }
+.session-step > summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  list-style: none;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.session-step > summary span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.session-step > summary::-webkit-details-marker { display: none; }
+.session-step > summary:hover { background: var(--surface-2); color: var(--ink); }
+.session-step > summary .icon { width: 12px; height: 12px; flex: none; }
+.session-step.thinking > summary { font-family: var(--font-sans); font-style: italic; }
+.session-step.is-error > summary { color: var(--status-blocked); }
+.session-step > .markdown {
+  max-height: 360px;
+  margin: 4px 0 6px;
+  padding: 8px 10px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  font-size: 12px;
+}
 @media (max-width: 520px) {
   .discussion-row { grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "source title" "source meta"; }
   .discussion-hint { display: none; }
@@ -879,13 +961,20 @@ body .sidebar { display: none; }
 .agent-bubble { align-self: start; max-width: 92%; padding: 0; border: 0; background: none; overflow-wrap: anywhere; }
 .agent-message.user .agent-bubble {
   max-width: 78%;
-  padding: 8px 12px;
-  border: 1px solid color-mix(in srgb, var(--brand) 18%, var(--line));
-  border-radius: 12px 12px 4px 12px;
-  background: var(--brand-light);
-  color: var(--ink);
+  padding: 8px 13px;
+  border: 0;
+  border-radius: 16px 16px 4px 16px;
+  background: var(--brand);
+  color: #fff;
 }
-.agent-message.assistant .agent-bubble.markdown { max-width: 100%; }
+.agent-message.assistant .agent-bubble.markdown {
+  max-width: 88%;
+  padding: 9px 13px 10px;
+  border: 1px solid var(--line);
+  border-radius: 16px 16px 16px 4px;
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+}
 .agent-bubble.markdown { max-height: none; overflow: visible; }
 .agent-bubble.markdown > :last-child { margin-bottom: 0; }
 .agent-bubble.markdown h1 { font-size: 17px; }
@@ -1198,6 +1287,7 @@ body .sidebar { display: none; }
 .chip.task-chip.status-in-progress { border-color: color-mix(in srgb, var(--status-in-progress) 30%, var(--line)); background: var(--status-in-progress-bg); color: var(--status-in-progress); }
 .chip.task-chip.status-ready { border-color: color-mix(in srgb, var(--status-ready) 30%, var(--line)); background: var(--status-ready-bg); color: var(--status-ready); }
 .chip.task-chip.status-blocked { border-color: color-mix(in srgb, var(--status-blocked) 30%, var(--line)); background: var(--status-blocked-bg); color: var(--status-blocked); }
+.chip.task-chip.status-on-hold { border-color: color-mix(in srgb, var(--status-on-hold) 30%, var(--line)); background: var(--status-on-hold-bg); color: var(--status-on-hold); }
 .chip.task-chip.status-done { color: var(--status-done); }
 .chip.case { background: var(--surface-2); color: var(--muted); }
 .chip.pitfall { border-color: color-mix(in srgb, var(--warn) 30%, var(--line)); background: var(--warn-bg); color: var(--warn); font-family: var(--font-mono); }
@@ -1770,3 +1860,67 @@ body.design-classic .task-avatar { display: none; }
 body.design-classic .task-priority { display: inline-flex; margin-left: auto; }
 body.design-jira .task-priority { display: none; }
 body.design-classic .graph { height: calc(100vh - 220px); }
+
+/* Definition of done */
+.dod-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.dod-chip .icon { width: 10px; height: 10px; stroke-width: 2.5; }
+.dod-chip.is-complete { border-color: color-mix(in srgb, var(--status-ready) 30%, var(--line)); background: var(--status-ready-bg); color: var(--status-ready); }
+.dod-progress { height: 6px; overflow: hidden; border-radius: 999px; background: var(--line); }
+.dod-progress-bar { display: block; height: 100%; border-radius: inherit; background: var(--status-ready); transition: width 160ms ease; }
+.dod-summary { margin: 6px 0 8px; color: var(--muted); font-size: 11.5px; }
+.dod-empty { margin: 0; font-size: 12px; }
+.dod-list { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; font-size: 12.5px; line-height: 1.45; }
+.dod-list li { display: flex; align-items: flex-start; gap: 8px; }
+.dod-list li.is-done span:last-child { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--faint); }
+.dod-box {
+  display: grid;
+  place-items: center;
+  width: 15px;
+  height: 15px;
+  flex: none;
+  margin-top: 1px;
+  border: 1.5px solid var(--line-strong);
+  border-radius: 4px;
+  color: #fff;
+}
+.dod-list li.is-done .dod-box { border-color: var(--status-ready); background: var(--status-ready); }
+.dod-box .icon { width: 10px; height: 10px; stroke-width: 3; }
+.done-dod {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--warn) 35%, var(--line));
+  border-radius: var(--radius);
+  background: var(--warn-bg);
+  color: var(--ink);
+  font-size: 12.5px;
+}
+.done-dod strong { color: var(--warn); }
+.done-dod ul { margin: 0; padding-left: 18px; }
+.done-dod p { margin: 0; color: var(--muted); font-size: 11.5px; }
+.dod-list code, .done-dod code { padding: 0 3px; border: 1px solid var(--line); border-radius: 3px; background: var(--surface-2); font-family: var(--font-mono); font-size: 0.92em; }
+
+/* Chat bubble color for your own messages: solid blue with white text in both themes. */
+:root { --chat-mine: #0052cc; }
+:root[data-theme="dark"] { --chat-mine: #2563eb; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --chat-mine: #2563eb; } }
+.session-message.user, .agent-message.user .agent-bubble { background: var(--chat-mine); }
+.session-viewer .modal-body { grid-template-columns: minmax(0, 1fr); }
+.session-viewer .session-messages, .session-viewer .session-resume { min-width: 0; }
+@media (max-width: 520px) {
+  .session-message, .session-steps { max-width: 92%; }
+}

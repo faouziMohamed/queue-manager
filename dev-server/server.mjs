@@ -25,7 +25,7 @@ const root = path.resolve(
 )
 const port = Number(process.argv[3] || process.env.PORT || 4317)
 const queueDir = path.join(root, '.queue')
-const statuses = ['in-progress', 'ready', 'blocked', 'done']
+const statuses = ['in-progress', 'ready', 'blocked', 'on-hold', 'done']
 const idPattern = /^Q-\d{4,}$/
 const contentTypes = {
   '.js': 'text/javascript; charset=utf-8',
@@ -70,6 +70,24 @@ function serialize(operation) {
   return next
 }
 
+// Checklist items under a "Definition of done" heading, up to the next heading of the same or higher level.
+function definitionOfDone(body) {
+  const lines = body.split('\n')
+  const start = lines.findIndex(line => /^#{2,6}\s+definition of done\b/i.test(line))
+  if (start === -1) return {present: false, total: 0, done: 0, items: []}
+  const level = lines[start].match(/^#+/)[0].length
+  const items = []
+  for (const line of lines.slice(start + 1)) {
+    const heading = line.match(/^(#{1,6})\s/)
+    if (heading && heading[1].length <= level) break
+    const checkbox = line.match(/^[-*]\s+\[([ xX])\]\s+(.*)$/)
+    const bullet = line.match(/^[-*]\s+(.*)$/)
+    if (checkbox) items.push({done: checkbox[1] !== ' ', text: checkbox[2].trim()})
+    else if (bullet) items.push({done: false, text: bullet[1].trim()})
+  }
+  return {present: true, total: items.length, done: items.filter(item => item.done).length, items}
+}
+
 function parseTask(text, status, file) {
   const sections = text.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/)
   if (!sections) return undefined
@@ -94,6 +112,7 @@ function parseTask(text, status, file) {
     prodGate: meta.prod_gate === 'true',
     sourceRepository: meta.source_repository || '',
     resume,
+    dod: definitionOfDone(body),
     body,
   }
 }
@@ -270,7 +289,7 @@ async function handleChats(request, response, url) {
   return false
 }
 
-const pageRoutes = ['/', '/board', '/in-progress', '/ready', '/blocked', '/awaiting', '/done', '/pitfalls', '/insights', '/graph']
+const pageRoutes = ['/', '/board', '/in-progress', '/ready', '/blocked', '/on-hold', '/awaiting', '/done', '/pitfalls', '/insights', '/graph']
 
 function isPageRoute(pathname) {
   return pageRoutes.includes(pathname) || /^\/tasks\/Q-\d{4,}$/.test(pathname)
@@ -483,6 +502,8 @@ function buildActionArgs(id, payload) {
   const action = String(payload.action || '')
   if (action === 'start') return ['start', id]
   if (action === 'unblock') return ['unblock', id]
+  if (action === 'hold') return ['hold', id]
+  if (action === 'resume') return ['resume', id]
   if (action === 'done') {
     const summary = String(payload.summary || '').trim()
     return summary ? ['done', id, '--summary', summary] : ['done', id]

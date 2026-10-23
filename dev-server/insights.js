@@ -5,6 +5,7 @@ export const statusOrder = [
   {key: 'in-progress', label: 'In progress', token: '--status-in-progress'},
   {key: 'ready', label: 'Ready', token: '--status-ready'},
   {key: 'blocked', label: 'Blocked', token: '--status-blocked'},
+  {key: 'on-hold', label: 'On hold', token: '--status-on-hold'},
   {key: 'awaiting', label: 'Awaiting production', token: '--status-awaiting'},
   {key: 'done', label: 'Done', token: '--status-done'},
 ]

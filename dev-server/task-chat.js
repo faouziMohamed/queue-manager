@@ -161,13 +161,43 @@ export function initTaskChat({showToast, reloadTask, hasUnsavedEdits, openSettin
     viewer.querySelector('[data-viewer="meta"]').textContent =
       `${sourceLabels[session.tool] || 'Queue chat'} · ${session.messageCount} messages · updated ${new Date(session.updatedAt).toLocaleString()}`
     viewer.querySelector('[data-viewer="command"]').textContent = session.resumeCommand || ''
-    const messages = session.messages.map(message => {
+    const assistantLabel = sourceLabels[session.tool] || 'Assistant'
+    const bubble = message => {
       const mentions = taskId && message.text.includes(taskId) ? ' mentions' : ''
-      const time = message.timestamp ? `<time>${escapeHtml(new Date(message.timestamp).toLocaleString())}</time>` : ''
-      return `<article class="session-message ${message.role}${mentions}">
-        <header><strong>${message.role === 'user' ? 'You' : sourceLabels[session.tool] || 'Assistant'}</strong>${time}</header>
-        <div class="markdown">${renderMarkdown(message.text)}</div>
+      const time = message.timestamp ? `<time>${escapeHtml(new Date(message.timestamp).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}))}</time>` : ''
+      const mine = message.role === 'user'
+      const content = mine ? escapeHtml(message.text).replace(/\n/g, '<br>') : renderMarkdown(message.text)
+      return `<article class="session-message ${mine ? 'user' : 'assistant'}${mentions}">
+        <header><strong>${mine ? 'You' : escapeHtml(assistantLabel)}</strong>${time}</header>
+        <div class="markdown">${content}</div>
       </article>`
+    }
+    const step = message => {
+      const icon = message.kind === 'thinking' ? 'i-message' : message.kind === 'result' ? 'i-check' : 'i-chevron'
+      const summary = message.summary || (message.kind === 'thinking' ? 'Thinking' : 'Tool')
+      return `<details class="session-step ${message.kind || 'call'}${message.summary?.includes('error') ? ' is-error' : ''}">
+        <summary><svg class="icon" aria-hidden="true"><use href="#${icon}"/></svg><span>${escapeHtml(summary)}</span></summary>
+        <div class="markdown">${renderMarkdown(message.text)}</div>
+      </details>`
+    }
+    const groups = []
+    for (const message of session.messages) {
+      const isStep = message.role === 'tool' || message.kind === 'thinking'
+      const last = groups[groups.length - 1]
+      if (isStep && last?.steps) last.steps.push(message)
+      else if (isStep) groups.push({steps: [message]})
+      else groups.push({message})
+    }
+    const messages = groups.map(group => {
+      if (group.message) return bubble(group.message)
+      const tools = group.steps.filter(item => item.kind === 'call' || (item.role === 'tool' && item.kind !== 'result')).length
+      const label = [tools ? `${tools} tool call${tools === 1 ? '' : 's'}` : '', group.steps.some(item => item.kind === 'thinking') ? 'thinking' : '']
+        .filter(Boolean).join(' · ')
+      const errors = group.steps.some(item => item.summary?.includes('error'))
+      return `<details class="session-steps${errors ? ' has-error' : ''}">
+        <summary><span class="session-steps-dot" aria-hidden="true"></span>Worked · ${escapeHtml(label || `${group.steps.length} steps`)}</summary>
+        <div class="session-steps-list">${group.steps.map(step).join('')}</div>
+      </details>`
     }).join('')
     const body = viewer.querySelector('[data-viewer="body"]')
     body.innerHTML = messages || '<p class="muted">No readable messages in this session.</p>'

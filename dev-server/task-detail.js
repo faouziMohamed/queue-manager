@@ -36,6 +36,9 @@ export function mountTaskDetail(root, {variant, onAction, onSave, onOpenFull, on
       element('blockers').innerHTML = relationRows(view.task.blockedBy, context, 'Not blocked by any task.')
       const dependents = context.tasks.filter(task => task.blockedBy.includes(view.task.id)).map(task => task.id)
       element('dependents').innerHTML = relationRows(dependents, context, 'No task waits on this one.')
+      const dod = view.task.dod
+      element('dod-card').hidden = !dod || !dod.present
+      element('dod').innerHTML = dodPanel(dod)
       const pitfalls = [...new Set((view.task.body.match(/\bPIT-\d{3,}\b/gi) || []).map(id => id.toUpperCase()))]
       element('pitfalls-card').hidden = pitfalls.length === 0
       element('pitfalls').innerHTML = pitfalls
@@ -167,6 +170,9 @@ function template(variant) {
         <section class="side-card"><h3>Details</h3><dl class="facts" data-detail="facts"></dl></section>
         <section class="side-card"><h3>Blocked by</h3><div class="relation-list" data-detail="blockers"></div></section>
         <section class="side-card"><h3>Blocks</h3><div class="relation-list" data-detail="dependents"></div></section>
+        <section class="side-card" data-detail="dod-card" hidden>
+          <h3>Definition of done</h3><div data-detail="dod"></div>
+        </section>
         <section class="side-card" data-detail="pitfalls-card" hidden>
           <h3>Related pitfalls</h3><div class="relation-list" data-detail="pitfalls"></div>
         </section>
@@ -219,6 +225,22 @@ function template(variant) {
       </div>
     </div>
   </div>`
+}
+
+function dodPanel(dod) {
+  if (!dod || !dod.present) return ''
+  if (dod.total === 0) return '<p class="muted dod-empty">The section has no checklist items yet.</p>'
+  const percent = Math.round((dod.done / dod.total) * 100)
+  return `<div class="dod-progress" role="progressbar" aria-valuemin="0" aria-valuemax="${dod.total}" aria-valuenow="${dod.done}" aria-label="Definition of done progress">
+      <span class="dod-progress-bar" style="width:${percent}%"></span>
+    </div>
+    <p class="dod-summary">${dod.done} of ${dod.total} checked</p>
+    <ul class="dod-list">
+      ${dod.items.map(item => `<li class="${item.done ? 'is-done' : ''}">
+        <span class="dod-box" aria-hidden="true">${item.done ? '<svg class="icon"><use href="#i-check"/></svg>' : ''}</span>
+        <span>${escapeHtml(item.text).replace(/`([^`]+)`/g, '<code>$1</code>')}</span>
+      </li>`).join('')}
+    </ul>`
 }
 
 function facts(task, context) {

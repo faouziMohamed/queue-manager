@@ -6,7 +6,7 @@ import os from 'node:os'
 import path from 'node:path'
 
 const PROVIDERS = ['auto', 'claude-cli', 'claude-api', 'codex-cli', 'codex-api', 'deepseek-cli', 'deepseek']
-const ACTIONS = ['start', 'unblock', 'done', 'block']
+const ACTIONS = ['start', 'unblock', 'hold', 'resume', 'done', 'block']
 const idPattern = /^Q-\d{4,}$/
 
 function agentError(statusCode, message) {
@@ -141,7 +141,7 @@ function systemPrompt(mode, activeTask) {
     '{"proposals":[{"type":"create_task","title":"...","priority":2,"resume":"..."},',
     '{"type":"upsert_section","task_id":"Q-0001","heading":"Clarifications","content":"- ..."},',
     '{"type":"update_body","task_id":"Q-0001","body":"..."},',
-    '{"type":"action","task_id":"Q-0001","action":"start|unblock|done|block","summary":"...","by":["Q-0002"]}]}',
+    '{"type":"action","task_id":"Q-0001","action":"start|unblock|hold|resume|done|block","summary":"...","by":["Q-0002"]}]}',
     'Prefer upsert_section over update_body: it replaces one section (or adds it) and keeps the rest of the body.',
     'Use proposals only when the user asks for a change; the human must click Apply.',
   ]
@@ -395,7 +395,7 @@ async function runDeepseek(system, context, messages, model) {
     body: JSON.stringify({
       model: model || 'deepseek-chat',
       temperature: 0.2,
-      max_tokens: 1600,
+      max_tokens: 8192,
       messages: [
         {role: 'system', content: `${system}\n\nQueue context:\n${context}`},
         ...messages,

@@ -17,7 +17,7 @@ the original classic sidebar.
 
 | Name | Use it for |
 | --- | --- |
-| `queue-manager` | Resuming, adding, blocking, unblocking and finishing tasks; keeping `QUEUE.md` current; opening the browser UI, including the pitfalls browser. |
+| `queue-manager` | Resuming, adding, blocking, unblocking, holding, resuming and finishing tasks; keeping `QUEUE.md` current; opening the browser UI, including the pitfalls browser. |
 
 ## Install
 
@@ -63,7 +63,7 @@ sh .claude/skills/queue-manager/scripts/queue.sh ui open
 
 | Path | Content |
 | --- | --- |
-| `.queue/<status>/<id>.md` | One file per task (`ready`, `in-progress`, `blocked`, `done`) |
+| `.queue/<status>/<id>.md` | One file per task (`ready`, `in-progress`, `blocked`, `on-hold`, `done`) |
 | `.queue/deps/` | Dependency edges in both directions |
 | `.queue/header.md` | Static header of the generated `QUEUE.md` |
 | `QUEUE.md` | Generated overview; never edit it by hand |

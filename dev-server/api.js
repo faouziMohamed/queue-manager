@@ -28,5 +28,8 @@ export function toTask(dto) {
     prodGate: Boolean(dto.prodGate),
     repo: String(dto.repo || ''),
     file: String(dto.file || ''),
+    dod: dto.dod && dto.dod.present
+      ? {present: true, total: Number(dto.dod.total) || 0, done: Number(dto.dod.done) || 0, items: Array.isArray(dto.dod.items) ? dto.dod.items : []}
+      : {present: false, total: 0, done: 0, items: []},
   }
 }

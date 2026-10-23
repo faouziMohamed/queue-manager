@@ -7,6 +7,12 @@
       "skillPath": "skills/find-skills/SKILL.md",
       "computedHash": "913b9d37d0d54047dd65222bb8c67b2bf04e3cb87dcad1729068d7a8b2c8c396"
     },
+    "queue-manager": {
+      "source": "faouziMohamed/queue-manager",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "6f91981f6e8138cd9caae364caf61a4d48c41ad23154162b9c87efc8c535e6c8"
+    },
     "skill-creator": {
       "source": "anthropics/skills",
       "sourceType": "github",

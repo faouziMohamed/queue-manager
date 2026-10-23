@@ -15,8 +15,8 @@ the original classic sidebar.
 
 ## Skill
 
-| Name | Use it for |
-| --- | --- |
+| Name            | Use it for                                                                                                                                                         |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `queue-manager` | Resuming, adding, blocking, unblocking, holding, resuming and finishing tasks; keeping `QUEUE.md` current; opening the browser UI, including the pitfalls browser. |
 
 ## Install
@@ -61,15 +61,15 @@ sh .claude/skills/queue-manager/scripts/queue.sh ui open
 
 ## What is stored where
 
-| Path | Content |
-| --- | --- |
-| `.queue/<status>/<id>.md` | One file per task (`ready`, `in-progress`, `blocked`, `on-hold`, `done`) |
-| `.queue/deps/` | Dependency edges in both directions |
-| `.queue/header.md` | Static header of the generated `QUEUE.md` |
-| `QUEUE.md` | Generated overview; never edit it by hand |
-| `PITFALLS.md` | Durable `PIT-###` lessons; tasks link to them by ID |
-| `.queue/config.json` | Optional shared settings: name, layout, repositories, assistant provider and `wipLimit` (tasks allowed in progress at once, default 1) |
-| `.queue/chats.sqlite`, `.queue/agent.env` | UI chat history, this machine's Design and Queue view choices, and optional API keys (git-ignored) |
+| Path                                      | Content                                                                                                                                |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `.queue/<status>/<id>.md`                 | One file per task (`ready`, `in-progress`, `blocked`, `on-hold`, `done`)                                                               |
+| `.queue/deps/`                            | Dependency edges in both directions                                                                                                    |
+| `.queue/header.md`                        | Static header of the generated `QUEUE.md`                                                                                              |
+| `QUEUE.md`                                | Generated overview; never edit it by hand                                                                                              |
+| `PITFALLS.md`                             | Durable `PIT-###` lessons; tasks link to them by ID                                                                                    |
+| `.queue/config.json`                      | Optional shared settings: name, layout, repositories, assistant provider and `wipLimit` (tasks allowed in progress at once, default 1) |
+| `.queue/chats.sqlite`, `.queue/agent.env` | UI chat history, this machine's Design and Queue view choices, and optional API keys (git-ignored)                                     |
 
 Whether you commit `.queue/` and `QUEUE.md` is up to you.
 

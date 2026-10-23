@@ -4,7 +4,6 @@ Read this when the user asks about the in-browser assistant: choosing a
 provider, adding API keys, chat history, the per-task Clarify chat, or why the
 assistant is hidden. The CLI never uses an assistant.
 
-
 The assistant appears only when at least one provider is configured: an
 installed `claude` or `codex` CLI, the `cdk` DeepSeek route, or an API key.
 With none, the Assistant button and drawer, the assistant settings, and the

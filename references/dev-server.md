@@ -5,7 +5,7 @@ or asks what a page in it does. Managing tasks never needs the UI: the CLI in
 SKILL.md is the source of truth, and every status change goes through it.
 
 Contents: Running it · Board and list views · Task drawer and page (with
-Discussions) · Pitfalls · Insights and graph · Files and privacy
+Discussions) · Pitfalls · Insights and graph · Files and privacy · Code layout
 
 ## Running it
 
@@ -176,3 +176,24 @@ files into pointers, so the whole workspace shares one searchable record.
 - It writes only inside `.queue/` and the task files, never runs Git or
   database commands, and loads no code from the network (`dev-server/vendor/`
   holds pinned copies of its libraries).
+
+## Code layout
+
+Read this before changing the UI code. Every API and page path is defined once,
+in `dev-server/shared/routes.constant.mjs`, and imported by both sides. Shared
+JSDoc types (`Task`, `Workspace`, `Chat`, `Proposal`…) live in
+`dev-server/shared/types.mjs`.
+
+- `server.mjs` is the entry point and only loads `server/main.mjs`, which wires
+  the services and routes.
+- `server/features/<domain>/` (tasks, workspace, preferences, chats, agent,
+  pitfalls, sessions, discussions) splits each domain into a controller (HTTP),
+  a service (rules) and a repository (files or SQLite).
+- `server/http/` holds the router, JSON helpers and static file serving;
+  `server/infrastructure/` runs `queue.sh`, opens SQLite and loads `agent.env`.
+- `client/app.js` starts the page and `client/app.view.js` renders the shell.
+  `client/core/` holds the API client, state, router and shared helpers;
+  `client/features/<domain>/` holds that domain's API service and views.
+
+Only `client/`, `shared/`, `vendor/`, `index.html` and `styles.css` are served
+to the browser; server code never is.

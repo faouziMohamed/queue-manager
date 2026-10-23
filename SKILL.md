@@ -5,8 +5,8 @@ license: MIT
 compatibility: POSIX shell for the CLI. The optional browser UI needs Node.js 22.13+ and curl.
 metadata:
   author: faouziMohamed
-  version: "1.0.0"
-  tags: "task-queue, agents, project-management"
+  version: '1.0.0'
+  tags: 'task-queue, agents, project-management'
 ---
 
 # Queue Manager
@@ -52,9 +52,10 @@ the project has no `.queue/` yet, run `init` first (see **Setting up a project**
 6. **Pausing work for now?** `hold Q-0007` parks it out of Ready and `next`;
    `resume Q-0007` returns it to Ready once its blockers are done.
 7. **Finished?** Check the acceptance criteria and, when present, the
-   **Definition of done**; then `done Q-0007 --summary "What shipped and why it
-   matters"`. An unchecked item means the task is not done: finish it, or record
-   why it is deferred under **What is left** or **Known, accepted**.
+   **Definition of done**; then run
+   `done Q-0007 --summary "What shipped and why it matters"`. An unchecked item
+   means the task is not done: finish it, or record why it is deferred under
+   **What is left** or **Known, accepted**.
 
 ## Resume protocol
 
@@ -103,7 +104,7 @@ fresh session can continue without searching the codebase:
 
 - **Resume line** — one concrete next action, kept current.
 - **Context to load** — the exact files that matter and why, plus the obvious
-  files that do *not* matter. This is what makes a cold pickup cheap.
+  files that do _not_ matter. This is what makes a cold pickup cheap.
 - **Acceptance criteria and progress as checkboxes.** `- [x]` means done and
   verified (say how); `- [ ]` means open. Checkboxes are easier to scan and update
   than prose.
@@ -146,7 +147,7 @@ fresh session can continue without searching the codebase:
   likely to recur, record it once in the project's `PITFALLS.md` (or its
   equivalent) with a stable `PIT-` ID, then link it from the tasks it affects.
   Task bodies keep decisions and evidence; they do not duplicate the lesson.
-  This keeps the queue about *this* work and the trap file about the codebase.
+  This keeps the queue about _this_ work and the trap file about the codebase.
 
 ## Data layout
 

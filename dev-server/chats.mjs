@@ -1,5 +1,6 @@
 import {promises as fs} from 'node:fs'
 import path from 'node:path'
+import {openPreferences, unavailablePreferences} from './preferences.mjs'
 
 const chatIdPattern = /^[A-Za-z0-9_-]{1,80}$/
 const taskIdPattern = /^Q-\d{4,}$/
@@ -97,6 +98,7 @@ export async function openChatStore(queueDir) {
 
   return {
     available: true,
+    ...openPreferences(db),
     list(query, taskId) {
       if (taskId) return listForTask.all(requireTaskId(taskId)).map(summaryFromRow)
       const term = String(query || '').trim().toLowerCase().slice(0, 200)
@@ -153,7 +155,16 @@ function unavailableStore(message) {
   function fail() {
     throw storeError(501, message)
   }
-  return {available: false, list: fail, related: fail, get: fail, save: fail, remove: fail, importMany: fail}
+  return {
+    available: false,
+    list: fail,
+    related: fail,
+    get: fail,
+    save: fail,
+    remove: fail,
+    importMany: fail,
+    ...unavailablePreferences(fail),
+  }
 }
 
 async function ensureIgnored(queueDir) {

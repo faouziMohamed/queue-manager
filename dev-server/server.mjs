@@ -10,6 +10,7 @@ import {attachLinkedTasks, readPitfalls} from './pitfalls.mjs'
 import {createSessionIndex} from './sessions.mjs'
 import {
   detectWorkspace,
+  normalizePreferences,
   normalizeWorkspaceConfig,
   pathExists,
   readWorkspaceConfig,
@@ -256,6 +257,30 @@ function chatStore() {
   return chatStorePromise
 }
 
+async function preferenceStore() {
+  try {
+    const store = await chatStore()
+    return store.available ? store : null
+  } catch {
+    return null
+  }
+}
+
+async function loadPreferences() {
+  if (!initialized) return
+  const store = await preferenceStore()
+  if (!store) return
+  workspace = {...workspace, ...normalizePreferences({...workspace, ...store.preferences()})}
+}
+
+async function saveWorkspace(config) {
+  const store = await preferenceStore()
+  if (store) store.savePreferences(normalizePreferences(config))
+  await writeWorkspaceConfig(root, config, {includePreferences: !store})
+}
+
+await loadPreferences()
+
 async function handleChats(request, response, url) {
   const store = await chatStore()
   if (url.pathname === '/api/chats' && request.method === 'GET') {
@@ -329,7 +354,7 @@ const server = createServer(async (request, response) => {
       if (!initialized) throw httpError(409, 'initialize the queue first')
       const payload = await readJson(request)
       const config = normalizeWorkspaceConfig(payload, workspace.name)
-      await writeWorkspaceConfig(root, config)
+      await saveWorkspace(config)
       workspace = {...config, mode: config.layout === 'single-repo' ? 'repo' : 'workspace'}
       sendJson(response, 200, {ok: true, workspace})
       return
@@ -340,9 +365,9 @@ const server = createServer(async (request, response) => {
       const payload = await readJson(request)
       const config = normalizeWorkspaceConfig(payload, path.basename(root))
       await serialize(() => runQueue(['init']))
-      await writeWorkspaceConfig(root, config)
-      workspace = {...config, mode: config.layout === 'single-repo' ? 'repo' : 'workspace'}
       initialized = true
+      await saveWorkspace(config)
+      workspace = {...config, mode: config.layout === 'single-repo' ? 'repo' : 'workspace'}
       sendJson(response, 201, {ok: true, workspace})
       return
     }
@@ -364,7 +389,7 @@ const server = createServer(async (request, response) => {
         {...workspace, agent: {provider: payload.provider, model: payload.model}},
         workspace.name,
       )
-      await writeWorkspaceConfig(root, config)
+      await saveWorkspace(config)
       workspace = config
       const available = await agentAvailability()
       sendJson(response, 200, {

@@ -49,8 +49,11 @@ shell.
 Queue settings → **Design** switches between **Jira-style** (the project
 header and tabs, full-width layout) and **Classic** (the original sidebar
 layout). Queue settings → **Queue view** chooses the default **List** or
-**Board**. The choices are stored in `.queue/config.json` as
-`"design": "jira" | "classic"` and `"view": "list" | "board"`.
+**Board**. Both are personal display choices: they are stored in the
+`preferences` table of `.queue/chats.sqlite` (git-ignored), not in the shared
+`.queue/config.json`. An older `config.json` that still has `"design"` or
+`"view"` is read as the starting value, and the next save moves them to the
+database. Without `node:sqlite` they stay in `config.json`.
 
 In Jira-style, the project header and tabs (Board, List, Insights, Pitfalls,
 Graph) sit above every queue page and the topbar carries search, settings,

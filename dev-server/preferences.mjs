@@ -26,4 +26,3 @@ export function openPreferences(db) {
 export function unavailablePreferences(fail) {
     return {preferences: () => ({}), savePreferences: fail}
 }
-

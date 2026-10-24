@@ -446,9 +446,10 @@ index_queue() {
         [ -s "$DEPS_DIR/$_iq_id.blocked-by" ] || continue
         for _iq_gate in $_iq_prod_gates; do
           if grep -qx "$_iq_gate" "$DEPS_DIR/$_iq_id.blocked-by"; then
-            _iq_awaiting="$_iq_awaiting$(printf '%s|%s|%s|%s' \
+            _iq_repos=$(meta "$_iq_file" repositories | tr -d ' ' | tr ',' ';')
+            _iq_awaiting="$_iq_awaiting$(printf '%s|%s|%s|%s|%s' \
               "$(meta "$_iq_file" priority)" "$(meta "$_iq_file" created)" \
-              "$_iq_id" "$_iq_gate")
+              "$_iq_id" "$_iq_gate" "$_iq_repos")
 "
             break
           fi
@@ -456,12 +457,24 @@ index_queue() {
       done
     done
     if [ -n "$_iq_awaiting" ]; then
-      printf '%s\n' "$_iq_awaiting" | sort -t'|' -k1,1n -k2,2 -k3,3 |
-        while IFS='|' read -r _p _c _id _gate; do
+      _iq_group=''
+      printf '%s\n' "$_iq_awaiting" | sort -t'|' -k5,5 -k1,1n -k2,2 -k3,3 |
+        while IFS='|' read -r _p _c _id _gate _repos; do
           [ -n "$_id" ] || continue
           find_task "$_id" || continue
-          printf -- '- %s — %s — awaiting production (%s) — %s\n' \
-            "$_id" "$(meta "$TASK_PATH" title)" "$_gate" "$(resume_of "$TASK_PATH")"
+          _iq_primary=${_repos%%;*}
+          [ -n "$_iq_primary" ] || _iq_primary='unassigned'
+          _iq_others=${_repos#"$_iq_primary"}
+          _iq_others=${_iq_others#;}
+          if [ "$_iq_primary" != "$_iq_group" ]; then
+            [ -n "$_iq_group" ] && printf '\n'
+            printf '### %s\n\n' "$_iq_primary"
+            _iq_group=$_iq_primary
+          fi
+          _iq_extra=''
+          [ -n "$_iq_others" ] && _iq_extra=" (also: $(printf '%s' "$_iq_others" | tr ';' ',' | sed 's/,/, /g'))"
+          printf -- '- %s — %s — awaiting production (%s)%s — %s\n' \
+            "$_id" "$(meta "$TASK_PATH" title)" "$_gate" "$_iq_extra" "$(resume_of "$TASK_PATH")"
         done
     else
       printf '_No tasks awaiting production._\n'

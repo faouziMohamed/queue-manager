@@ -167,7 +167,11 @@ Moving a task is one `mv`, atomic on the same filesystem. `QUEUE_DIR` and
 
 **Production gate.** Set `prod_gate: true` in one task's frontmatter (typically a
 release approval). Open tasks blocked by it are listed under **Awaiting
-production** in `QUEUE.md`, using the ordinary `block --by <gate>` edges.
+production** in `QUEUE.md`, using the ordinary `block --by <gate>` edges. A
+task's `repositories:` frontmatter (comma-separated) groups that section by
+repository, so work that ships together reads together: the first repository is
+the heading, the others are marked `also:`, and tasks without the field fall
+under `unassigned`.
 
 ## Setting up a project
 
